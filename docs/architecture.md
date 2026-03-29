@@ -155,19 +155,19 @@ Key functions:
 
 ## Backend Module Map
 
-| Module | Port/Role | Key Dependencies | Kafka Topics |
-|---|---|---|---|
-| auth | REST /auth/* | Privy SDK, JWT, Redis | — |
-| account | REST /account/* | PostgreSQL, auth | — |
-| order | REST /orders/* | PostgreSQL, risk, strategy, EVM adapter | order.created |
-| settlement | Worker background | Redis price cache, EVM adapter | order.won, order.lost |
-| payment | REST /payments/* | EVM adapter, PostgreSQL | payment.processed |
-| distribution | Kafka consumer | PostgreSQL, EVM adapter | settlement.processed |
-| price | Worker event listener | Ethers.js WS, Redis, Kafka | price.updated |
-| risk | Internal service | Redis, PostgreSQL | — |
-| strategy | Internal service | price service, config | — |
-| socket | Socket.io gateway | Redis pub/sub, Kafka | — |
-| worker | Standalone app :3002 | All above modules | — |
+| Module       | Port/Role             | Key Dependencies                        | Kafka Topics          |
+| ------------ | --------------------- | --------------------------------------- | --------------------- |
+| auth         | REST /auth/\*         | Privy SDK, JWT, Redis                   | —                     |
+| account      | REST /account/\*      | PostgreSQL, auth                        | —                     |
+| order        | REST /orders/\*       | PostgreSQL, risk, strategy, EVM adapter | order.created         |
+| settlement   | Worker background     | Redis price cache, EVM adapter          | order.won, order.lost |
+| payment      | REST /payments/\*     | EVM adapter, PostgreSQL                 | payment.processed     |
+| distribution | Kafka consumer        | PostgreSQL, EVM adapter                 | settlement.processed  |
+| price        | Worker event listener | Ethers.js WS, Redis, Kafka              | price.updated         |
+| risk         | Internal service      | Redis, PostgreSQL                       | —                     |
+| strategy     | Internal service      | price service, config                   | —                     |
+| socket       | Socket.io gateway     | Redis pub/sub, Kafka                    | —                     |
+| worker       | Standalone app :3002  | All above modules                       | —                     |
 
 ---
 
@@ -296,12 +296,12 @@ NEXT_PUBLIC_TAP_ORDER_ADDRESS=0x...
 
 ## Architectural Decisions
 
-| Decision | Rationale | Date |
-|---|---|---|
-| BASE chain over Ethereum mainnet | Lower gas fees → smaller stakes viable. EVM-compatible so same tooling. | — |
-| Chainlink oracle (not internal price feed) | Trustless price source → users can verify settlement on-chain. No way to manipulate price. | — |
-| NestJS Worker as separate process | Settlement loop must not block API. Separate process = independent scaling + restart without downtime. | — |
-| Privy for auth | Embedded wallet = web2-like UX without losing self-custody. No seed phrase friction for new users. | — |
-| Kafka over direct DB events | Decouples settlement from order creation. Settlement worker can lag without blocking trades. Replay on crash. | — |
-| Fixed multiplier tiers for MVP | Dynamic pricing (based on volatility) is complex. Fixed tiers ship faster and are easier to audit for house edge correctness. | — |
-| Redis for price cache (not DB) | Settlement worker checks price every 100ms. DB cannot handle this read rate. Redis read latency ~0.1ms. | — |
+| Decision                                   | Rationale                                                                                                                     | Date |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | ---- |
+| BASE chain over Ethereum mainnet           | Lower gas fees → smaller stakes viable. EVM-compatible so same tooling.                                                       | —    |
+| Chainlink oracle (not internal price feed) | Trustless price source → users can verify settlement on-chain. No way to manipulate price.                                    | —    |
+| NestJS Worker as separate process          | Settlement loop must not block API. Separate process = independent scaling + restart without downtime.                        | —    |
+| Privy for auth                             | Embedded wallet = web2-like UX without losing self-custody. No seed phrase friction for new users.                            | —    |
+| Kafka over direct DB events                | Decouples settlement from order creation. Settlement worker can lag without blocking trades. Replay on crash.                 | —    |
+| Fixed multiplier tiers for MVP             | Dynamic pricing (based on volatility) is complex. Fixed tiers ship faster and are easier to audit for house edge correctness. | —    |
+| Redis for price cache (not DB)             | Settlement worker checks price every 100ms. DB cannot handle this read rate. Redis read latency ~0.1ms.                       | —    |

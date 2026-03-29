@@ -1,24 +1,133 @@
 {
   "permissions": {
     "allow": [
-      "Bash(yarn*)", "Bash(docker*)",
-      "Bash(git *)", "Bash(npx hardhat*)",
-      "Read(*)", "Write(*)"
+      "Bash(yarn*)",
+      "Bash(npm*)",
+      "Bash(npx*)",
+      "Bash(node*)",
+      "Bash(docker compose*)",
+      "Bash(docker build*)",
+      "Bash(docker logs*)",
+      "Bash(docker ps*)",
+      "Bash(docker restart*)",
+      "Bash(docker pull*)",
+      "Bash(git status)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git checkout*)",
+      "Bash(git pull*)",
+      "Bash(git push origin feat/*)",
+      "Bash(git push origin fix/*)",
+      "Bash(git push origin chore/*)",
+      "Bash(git branch*)",
+      "Bash(git stash*)",
+      "Bash(git worktree*)",
+      "Bash(npx hardhat*)",
+      "Bash(npx typechain*)",
+      "Bash(redis-cli*)",
+      "Bash(curl http://localhost*)",
+      "Bash(curl https://api.*)",
+      "Bash(chmod +x .claude/hooks/*.sh)",
+      "Bash(cat .env.example)",
+      "Bash(cp .env.example .env*)",
+      "Bash(ls*)",
+      "Bash(pwd)",
+      "Bash(echo*)",
+      "Bash(mkdir -p*)",
+      "Bash(mv apps/*)",
+      "Bash(cp apps/*)",
+      "Bash(find . -name*)",
+      "Bash(grep -r*)",
+      "Bash(wc -l*)",
+      "Bash(ssh deploy@*)",
+      "Bash(./deploy.sh)",
+      "Read(*)",
+      "Write(apps/**)",
+      "Write(packages/**)",
+      "Write(docs/**)",
+      "Write(.claude/**)",
+      "Write(CLAUDE.md)",
+      "Write(docker-compose.yml)",
+      "Write(.env.example)",
+      "Write(.gitignore)"
     ],
     "deny": [
       "Bash(rm -rf*)",
+      "Bash(rm -f .env*)",
       "Bash(git push --force*)",
-      "Bash(DROP TABLE*)"
+      "Bash(git push -f*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -fd*)",
+      "Bash(docker system prune*)",
+      "Bash(docker volume rm*)",
+      "Bash(docker rm -f*)",
+      "Bash(kill -9*)",
+      "Bash(pkill*)",
+      "Bash(sudo rm*)",
+      "Bash(sudo chmod 777*)",
+      "Bash(curl * | bash*)",
+      "Bash(wget * | sh*)",
+      "Bash(npm publish*)",
+      "Bash(yarn publish*)",
+      "Bash(npx hardhat run * --network base\b)",
+      "Write(.env)",
+      "Write(.env.local)",
+      "Write(.env.production*)",
+      "Write(apps/contracts/typechain-types/**)",
+      "Write(apps/backend/src/adapters/typechain/**)"
     ]
   },
   "mcpServers": {
     "github": {
       "command": "npx",
-      "args": ["@modelcontextprotocol/server-github"]
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
     },
     "filesystem": {
       "command": "npx",
-      "args": ["@modelcontextprotocol/server-filesystem", "."]
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
+    },
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres", "${POSTGRES_URL}"]
     }
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/auto-lint.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/on-stop.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/pre-bash-check.sh"
+          }
+        ]
+      }
+    ]
   }
 }

@@ -10,6 +10,7 @@
 **Product:** Tap Trading — mobile-first gamified price-touch trading platform.
 
 **Core mechanic:** User predicts whether a market price will touch a target level before expiry.
+
 - Binary outcome: touch = **WIN** (Stake × Multiplier paid out automatically)
 - No touch before expiry = **LOST** (stake gone)
 - Settlement is automatic, on-chain, trustless — no manual intervention needed
@@ -17,8 +18,9 @@
 **Target users:** Crypto-native mobile users who want fast, simple exposure to price movements without managing positions, stop-losses, or reading charts.
 
 **References:**
-- Concept: https://www.tradesmarter.com/tap-trading.html
-- Codebase org: https://github.com/tapl-chainlink (backend + frontend + smart-contracts)
+
+- Concept: <https://www.tradesmarter.com/tap-trading.html>
+- Codebase org: <https://github.com/tapl-chainlink> (backend + frontend + smart-contracts)
 
 ---
 
@@ -84,6 +86,7 @@ tap-trading/                        ← monorepo root (yarn workspaces)
 ## 3. Core Business Logic — READ THIS CAREFULLY
 
 ### 3.1 Trade flow (end-to-end)
+
 ```
 1. User opens app → sees live BTC/USD price from Chainlink
 2. User sees TargetBlockGrid: blocks at ±0.5%, ±1%, ±2% from current price
@@ -100,6 +103,7 @@ tap-trading/                        ← monorepo root (yarn workspaces)
 ```
 
 ### 3.2 Multiplier pricing — MVP fixed tiers
+
 ```
 Target Distance | Multiplier Offered | House Edge (approx)
 ±0.5%           | 2x                 | ~20%
@@ -115,6 +119,7 @@ Formula:
 > Dynamic pricing based on real-time volatility is a Milestone 2 feature.
 
 ### 3.3 Settlement rules (critical — must be exact)
+
 ```
 WIN condition:  currentPrice >= targetPrice  (if isAbove = true)
                 currentPrice <= targetPrice  (if isAbove = false)
@@ -129,6 +134,7 @@ Edge cases that MUST be handled:
 ```
 
 ### 3.4 Risk controls
+
 ```
 Per-trade limits:
   Max stake per trade: 0.1 ETH (configurable per asset)
@@ -149,6 +155,7 @@ Platform limits:
 ## 4. Smart Contract Architecture
 
 ### Key contracts
+
 ```
 TapOrder.sol
   createOrder(asset, targetPrice, isAbove, duration, multiplierBps)
@@ -181,6 +188,7 @@ PayoutPool.sol
 ```
 
 ### TypeChain workflow
+
 ```bash
 # After ANY contract change:
 cd apps/contracts
@@ -193,21 +201,22 @@ yarn typechain:gen
 
 ## 5. Backend Module Map
 
-| Module | HTTP/Role | Key deps | Publishes to Kafka |
-|---|---|---|---|
-| auth | REST /auth/* | Privy SDK, JWT, Redis | — |
-| account | REST /account/* | PostgreSQL | — |
-| order | REST /orders/* | PostgreSQL, risk, strategy, EVM adapter | order.created |
-| settlement | Worker job | Redis, EVM adapter | order.won, order.lost |
-| payment | REST /payments/* | EVM adapter, PostgreSQL | payment.processed |
-| distribution | Kafka consumer | PostgreSQL, EVM adapter | — |
-| price | Worker listener | Ethers.js WS, Redis | price.updated |
-| risk | Internal service | Redis, PostgreSQL | — |
-| strategy | Internal service | price service, config | — |
-| socket | Socket.io :3001 | Redis pub/sub, Kafka | — |
-| worker | Standalone :3002 | All above modules | — |
+| Module       | HTTP/Role         | Key deps                                | Publishes to Kafka    |
+| ------------ | ----------------- | --------------------------------------- | --------------------- |
+| auth         | REST /auth/\*     | Privy SDK, JWT, Redis                   | —                     |
+| account      | REST /account/\*  | PostgreSQL                              | —                     |
+| order        | REST /orders/\*   | PostgreSQL, risk, strategy, EVM adapter | order.created         |
+| settlement   | Worker job        | Redis, EVM adapter                      | order.won, order.lost |
+| payment      | REST /payments/\* | EVM adapter, PostgreSQL                 | payment.processed     |
+| distribution | Kafka consumer    | PostgreSQL, EVM adapter                 | —                     |
+| price        | Worker listener   | Ethers.js WS, Redis                     | price.updated         |
+| risk         | Internal service  | Redis, PostgreSQL                       | —                     |
+| strategy     | Internal service  | price service, config                   | —                     |
+| socket       | Socket.io :3001   | Redis pub/sub, Kafka                    | —                     |
+| worker       | Standalone :3002  | All above modules                       | —                     |
 
 ### NestJS module pattern (always follow this)
+
 ```typescript
 @Module({
   imports: [TypeOrmModule.forFeature([OrderEntity])],
@@ -219,24 +228,26 @@ export class OrderModule {}
 ```
 
 ### EVM adapter pattern
+
 ```typescript
 @Injectable()
 export class TapOrderAdapter {
   private contract: TapOrder;
 
   constructor(private config: ConfigService) {
-    const provider = new ethers.JsonRpcProvider(config.get('RPC'));
-    const wallet = new ethers.Wallet(config.get('ADMIN_PRIVATE_KEY'), provider);
-    this.contract = TapOrder__factory.connect(
-      config.get('CONTRACT_TAP_ORDER'), wallet
-    );
+    const provider = new ethers.JsonRpcProvider(config.get("RPC"));
+    const wallet = new ethers.Wallet(config.get("ADMIN_PRIVATE_KEY"), provider);
+    this.contract = TapOrder__factory.connect(config.get("CONTRACT_TAP_ORDER"), wallet);
   }
 
   async createOrder(params: CreateOrderParams): Promise<ethers.TransactionReceipt> {
     const tx = await this.contract.createOrder(
-      params.asset, params.targetPrice, params.isAbove,
-      params.duration, params.multiplierBps,
-      { value: params.stakeWei }
+      params.asset,
+      params.targetPrice,
+      params.isAbove,
+      params.duration,
+      params.multiplierBps,
+      { value: params.stakeWei },
     );
     return tx.wait();
   }
@@ -244,6 +255,7 @@ export class TapOrderAdapter {
 ```
 
 ### Price cache pattern (Redis)
+
 ```typescript
 // Writer (price module worker):
 await redis.set(`price:${asset}`, JSON.stringify({ value: price, updatedAt: Date.now() }));
@@ -255,10 +267,11 @@ if (Date.now() - updatedAt > 60_000) throw new StalePriceError(asset);
 ```
 
 ### Socket push pattern
+
 ```typescript
 // From settlement worker via Kafka → Socket gateway:
-this.server.to(`user:${userId}`).emit('order:won', { orderId, payout });
-this.server.to(`user:${userId}`).emit('order:lost', { orderId });
+this.server.to(`user:${userId}`).emit("order:won", { orderId, payout });
+this.server.to(`user:${userId}`).emit("order:lost", { orderId });
 ```
 
 ---
@@ -310,6 +323,7 @@ NEXT_PUBLIC_TAP_ORDER_ADDRESS=0x...
 ## 7. Coding Patterns & Conventions
 
 ### Commit convention
+
 ```
 feat: add settlement worker retry logic
 fix: handle stale price edge case in settleOrder
@@ -319,12 +333,14 @@ docs: update architecture.md with new module
 ```
 
 ### TypeScript rules
+
 - `strict: true` — no `any`, no implicit returns
 - All DTOs use `class-validator` decorators
 - All entities use TypeORM decorators, never raw SQL except migrations
 - All service methods return typed promises, never `Promise<any>`
 
 ### Error handling pattern
+
 ```typescript
 // Custom exceptions — always extend HttpException
 export class StalePriceException extends BadRequestException {
@@ -337,23 +353,27 @@ export class RiskLimitExceededException extends ForbiddenException { ... }
 ```
 
 ### Testing pattern (Vitest)
+
 ```typescript
-describe('OrderService', () => {
-  it('rejects order when user exceeds max concurrent limit')
-  it('rejects order when asset exposure limit reached')
-  it('calls contract.createOrder with correct params')
-  it('publishes order.created to Kafka after DB save')
-  it('throws NotFoundException for unknown orderId')
-})
+describe("OrderService", () => {
+  it("rejects order when user exceeds max concurrent limit");
+  it("rejects order when asset exposure limit reached");
+  it("calls contract.createOrder with correct params");
+  it("publishes order.created to Kafka after DB save");
+  it("throws NotFoundException for unknown orderId");
+});
 ```
 
 ### Frontend hook pattern
+
 ```typescript
 export function usePrice(asset: string) {
   const [price, setPrice] = useState<bigint>(0n);
   useEffect(() => {
     socket.on(`price:${asset}`, ({ value }) => setPrice(BigInt(value)));
-    return () => { socket.off(`price:${asset}`) };
+    return () => {
+      socket.off(`price:${asset}`);
+    };
   }, [asset]);
   return price;
 }
@@ -392,6 +412,7 @@ Run before any commit:
 Run through this before any mainnet deploy or major release.
 
 ### Smart contracts
+
 - [ ] Reentrancy guard on `createOrder` and `settleOrder` (`nonReentrant`)
 - [ ] Stale price check: reject if `updatedAt > 60s` ago
 - [ ] Integer overflow: Solidity 0.8+ handles this, but verify multiplier math
@@ -401,6 +422,7 @@ Run through this before any mainnet deploy or major release.
 - [ ] Verify on Basescan after deploy
 
 ### Backend
+
 - [ ] JWT secret is min 32 chars, rotated on breach
 - [ ] Rate limiting: per-IP and per-wallet (NestJS ThrottlerModule)
 - [ ] All DTOs validated with `class-validator` before hitting service
@@ -409,6 +431,7 @@ Run through this before any mainnet deploy or major release.
 - [ ] Settlement worker: retry with exponential backoff on tx failure
 
 ### Frontend
+
 - [ ] No private keys in `localStorage` or `sessionStorage`
 - [ ] Privy handles all key management — never access raw wallet
 - [ ] API calls use HTTPS in production
@@ -434,29 +457,29 @@ Run through this before any mainnet deploy or major release.
 
 ## 11. Available Slash Commands
 
-| Command | When to use |
-|---|---|
-| `/new-feature [name]` | Start any new feature (plans before coding) |
-| `/commit` | Create a well-formatted git commit |
-| `/pr` | Create a GitHub Pull Request |
-| `/update-docs` | Update changelog + architecture after completing feature |
-| `/retro` | End-of-session summary + update project-status.md |
-| `/backend-module [name]` | Scaffold a new NestJS module with full boilerplate |
-| `/settlement-debug` | Debug when orders are not settling correctly |
-| `/price-feed-check` | Verify Chainlink feeds are live and fresh |
-| `/deploy` | Deploy contracts + backend + frontend to production |
-| `/dev-setup` | Start local dev environment from scratch |
+| Command                  | When to use                                              |
+| ------------------------ | -------------------------------------------------------- |
+| `/new-feature [name]`    | Start any new feature (plans before coding)              |
+| `/commit`                | Create a well-formatted git commit                       |
+| `/pr`                    | Create a GitHub Pull Request                             |
+| `/update-docs`           | Update changelog + architecture after completing feature |
+| `/retro`                 | End-of-session summary + update project-status.md        |
+| `/backend-module [name]` | Scaffold a new NestJS module with full boilerplate       |
+| `/settlement-debug`      | Debug when orders are not settling correctly             |
+| `/price-feed-check`      | Verify Chainlink feeds are live and fresh                |
+| `/deploy`                | Deploy contracts + backend + frontend to production      |
+| `/dev-setup`             | Start local dev environment from scratch                 |
 
 ---
 
 ## 12. Known Issues & Architectural Decisions
 
-| # | Decision / Issue | Resolution | Date |
-|---|---|---|---|
-| 1 | Fixed vs dynamic multiplier for MVP | Fixed tiers — simpler to audit house edge correctness | — |
-| 2 | Which testnet | BASE Sepolia — has Chainlink feeds + lowest gas | — |
-| 3 | Auth approach | Privy embedded wallet — web2 UX without losing self-custody | — |
-| 4 | Settlement trigger | Worker polls Redis every 100ms (not on-chain event) — lower latency | — |
-| 5 | Settlement permissions | Permissionless (anyone can call settleOrder) — trustless, no single point of failure | — |
-| 6 | Price source | Chainlink only — manipulation-resistant, users can verify on-chain | — |
-| 7 | Kafka vs direct DB events | Kafka — decouples settlement from order creation, replay on crash | — |
+| #   | Decision / Issue                    | Resolution                                                                           | Date |
+| --- | ----------------------------------- | ------------------------------------------------------------------------------------ | ---- |
+| 1   | Fixed vs dynamic multiplier for MVP | Fixed tiers — simpler to audit house edge correctness                                | —    |
+| 2   | Which testnet                       | BASE Sepolia — has Chainlink feeds + lowest gas                                      | —    |
+| 3   | Auth approach                       | Privy embedded wallet — web2 UX without losing self-custody                          | —    |
+| 4   | Settlement trigger                  | Worker polls Redis every 100ms (not on-chain event) — lower latency                  | —    |
+| 5   | Settlement permissions              | Permissionless (anyone can call settleOrder) — trustless, no single point of failure | —    |
+| 6   | Price source                        | Chainlink only — manipulation-resistant, users can verify on-chain                   | —    |
+| 7   | Kafka vs direct DB events           | Kafka — decouples settlement from order creation, replay on crash                    | —    |
