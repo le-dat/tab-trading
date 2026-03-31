@@ -1,16 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
 /**
  * @title MockV3Aggregator
  * @notice Mock of Chainlink AggregatorV3Interface for local testing.
  */
 contract MockV3Aggregator is AggregatorV3Interface {
-    uint8  public constant decimals = 8;
+    uint8  public constant DECIMALS = 8;
     string public description = "Mock Aggregator";
-    uint256 public constant version = 1;
+    uint256 public constant VERSION = 1;
+
+    function decimals() external pure override returns (uint8) {
+        return DECIMALS;
+    }
+
+    function version() external pure override returns (uint256) {
+        return VERSION;
+    }
 
     int256  private _answer;
     uint256 private _updatedAt;
@@ -35,7 +43,7 @@ contract MockV3Aggregator is AggregatorV3Interface {
         ++_roundId;
     }
 
-    function getRoundData(uint80 roundIdArg)
+    function getRoundData(uint80 /* roundIdArg */)
         external
         view
         override

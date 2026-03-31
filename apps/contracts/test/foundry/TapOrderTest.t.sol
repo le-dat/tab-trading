@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
-import "../../contracts/TapOrder.sol";
-import "../../contracts/PayoutPool.sol";
-import "../../contracts/PriceFeedAdapter.sol";
-import "../../contracts/mocks/MockV3Aggregator.sol";
+import {Test} from "forge-std/Test.sol";
+import {TapOrder} from "../../contracts/TapOrder.sol";
+import {PayoutPool} from "../../contracts/PayoutPool.sol";
+import {PriceFeedAdapter} from "../../contracts/PriceFeedAdapter.sol";
+import {MockV3Aggregator} from "../../contracts/mocks/MockV3Aggregator.sol";
 
 contract TapOrderTest is Test {
     // -----------------------------------------------------------------------

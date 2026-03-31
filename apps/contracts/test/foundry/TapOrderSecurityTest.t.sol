@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
-import "../../contracts/TapOrder.sol";
-import "../../contracts/PayoutPool.sol";
-import "../../contracts/PriceFeedAdapter.sol";
-import "../../contracts/mocks/MockV3Aggregator.sol";
+import {Test} from "forge-std/Test.sol";
+import {TapOrder} from "../../contracts/TapOrder.sol";
+import {PayoutPool} from "../../contracts/PayoutPool.sol";
+import {PriceFeedAdapter} from "../../contracts/PriceFeedAdapter.sol";
+import {MockV3Aggregator} from "../../contracts/mocks/MockV3Aggregator.sol";
 
 /// @title TapOrderSecurityTest
 /// @notice Security-focused tests probing reentrancy, access control,
@@ -34,7 +34,7 @@ contract TapOrderSecurityTest is Test {
     // -----------------------------------------------------------------------
     address owner;
     address user;
-    address attackerEOA;
+    address attackerEoa;
 
     // -----------------------------------------------------------------------
     // setUp
@@ -42,7 +42,7 @@ contract TapOrderSecurityTest is Test {
     function setUp() public {
         owner = address(this);
         user = makeAddr("user");
-        attackerEOA = makeAddr("attacker");
+        attackerEoa = makeAddr("attacker");
 
         priceFeedAdapter = new PriceFeedAdapter();
         payoutPool = new PayoutPool();
@@ -157,7 +157,7 @@ contract TapOrderSecurityTest is Test {
     /// @notice [REENT-02] A contract cannot re-enter settleOrder via payout callback
     ///         nonReentrant on settleOrder should block re-entry attempts.
     function test_settleOrder_nonReentrantBlocked() public {
-        uint256 orderId = _createOrder(user, 66000 * 10**8, true, 0.01 ether);
+        _createOrder(user, 66000 * 10**8, true, 0.01 ether);
         btcFeed.updateAnswer(66000 * 10**8);
 
         // If the attacker is the order's user, payout sends ETH to them,
@@ -286,7 +286,7 @@ contract TapOrderSecurityTest is Test {
     /// @notice [MATH-01] Payout calculation does not overflow with max values
     ///         max stake (hypothetical) * max multiplier (1000 = 10x)
     ///         With Solidity 0.8+, overflow would revert automatically.
-    function test_payout_noOverflow_withinUint256() public {
+    function test_payout_noOverflow_withinUint256() public pure {
         // 1e25 * 1000 = 1e28, well within uint256 max (~1e77)
         uint256 largeStake = 10_000 ether;
         uint256 payout = (largeStake * MULTIPLIER_10X) / 10000;
@@ -294,7 +294,7 @@ contract TapOrderSecurityTest is Test {
     }
 
     /// @notice [MATH-02] Small stake produces correct truncated payout
-    function test_payout_truncation_roundingDown() public {
+    function test_payout_truncation_roundingDown() public pure {
         // 1 wei * 500 / 10000 = 0 (integer division)
         uint256 stake = 1;
         uint256 payout = (stake * MULTIPLIER_5X) / 10000;
@@ -302,7 +302,7 @@ contract TapOrderSecurityTest is Test {
     }
 
     /// @notice [MATH-03] Precise payout at common stake amounts
-    function test_payout_precision() public {
+    function test_payout_precision() public pure {
         // 0.01 ETH * 500 / 10000 = 0.0005 ETH
         uint256 stake = 0.01 ether;
         uint256 payout = (stake * MULTIPLIER_5X) / 10000;
@@ -541,7 +541,7 @@ contract TapOrderSecurityTest is Test {
         btcFeed.updateAnswer(66000 * 10**8);
 
         // attacker (not the order owner) settles successfully
-        vm.prank(attackerEOA);
+        vm.prank(attackerEoa);
         tapOrder.settleOrder(orderId);
 
         (, , , , , , , TapOrder.OrderStatus status) = tapOrder.orders(orderId);
