@@ -177,6 +177,7 @@ Repeat for each module in order:
   [x] Step 3: Complete TapOrder Foundry tests (23 tests passing)
   [x] Step 4: Add batchSettle + tests
   [x] Step 5: Verify TypeChain bindings (62 typings generated)
+  [x] Step 5b: Contract hardening — ReentrancyGuard, Ownable, stake limits, PayoutPool pause coordination (57 tests passing)
 
 [ ] Phase 2: Infrastructure (~3 days)
   [ ] Step 6: Docker Compose setup

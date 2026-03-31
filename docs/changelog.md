@@ -11,7 +11,7 @@
 
 After completing a feature, run:
 ```
-/update-docs
+/checkpoint
 ```
 Claude will add an entry to this file with: what was built, key decisions made, any bugs encountered and fixed.
 
@@ -24,11 +24,17 @@ Claude will add an entry to this file with: what was built, key decisions made, 
 - CLAUDE.md populated with full Tap Trading domain context
 - docs/ folder initialized with spec-doc, architecture, changelog, project-status
 - project-plan.md generated (22 steps, 6 phases, ~8 weeks to Milestone 1)
+- `PayoutPool.sol`: added `ReentrancyGuard` + `nonReentrant` on `withdraw()`
+- `PriceFeedAdapter.sol`: added `Ownable` + `onlyOwner` on `setFeed()`
+- `TapOrder.sol`: added `MIN_STAKE` (0.001 ETH) / `MAX_STAKE` (0.1 ETH) stake guards
+- `TapOrder.sol`: `pause()`/`unpause()` now coordinate with `PayoutPool.pause()`/`unpause()`
+- `scripts/deploy.ts`: grants `DEFAULT_ADMIN_ROLE` to TapOrder for PayoutPool pause coordination
 
 ### Fixed
 - `@nomicfoundation/hardhat-toolbox` missing dep → replaced with `@nomicfoundation/hardhat-ethers` to avoid Hardhat 3 migration chain
 - Stale feed test arithmetic underflow (timestamp warp needed before updating mock)
 - Missing `batchSettle` external call via `try this.settleOrder()` for partial failure isolation
+- `deploy.ts`: missing `DEFAULT_ADMIN_ROLE` grant to TapOrder (needed for PayoutPool pause coordination)
 
 ---
 

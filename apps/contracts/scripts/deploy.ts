@@ -33,12 +33,18 @@ async function main() {
   const tapOrderAddr = await tapOrder.getAddress();
   console.log("  TapOrder:", tapOrderAddr);
 
-  // 4. Grant TapOrder permission to call PayoutPool.payout()
+  // 4. Grant TapOrder permission to call PayoutPool.payout() and pause/unpause()
   console.log("\n[4/5] Configuring roles...");
   const PAYOUT_ROLE = await pool.PAYOUT_ROLE();
-  const tx = await pool.grantRole(PAYOUT_ROLE, tapOrderAddr);
-  await tx.wait();
+  const tx1 = await pool.grantRole(PAYOUT_ROLE, tapOrderAddr);
+  await tx1.wait();
   console.log("  PAYOUT_ROLE granted to TapOrder ✓");
+
+  // Grant TapOrder DEFAULT_ADMIN_ROLE so pause/unpause coordination works
+  const DEFAULT_ADMIN_ROLE = await pool.DEFAULT_ADMIN_ROLE();
+  const tx2 = await pool.grantRole(DEFAULT_ADMIN_ROLE, tapOrderAddr);
+  await tx2.wait();
+  console.log("  DEFAULT_ADMIN_ROLE granted to TapOrder (pause coordination) ✓");
 
   // 5. Whitelist assets from env
   const btcFeed = process.env.FEED_BTC_USD;

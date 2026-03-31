@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IPriceFeedAdapter.sol";
 
 /**
@@ -10,7 +11,7 @@ import "./interfaces/IPriceFeedAdapter.sol";
  *         All price queries revert if the feed hasn't been updated within STALE_THRESHOLD
  *         or if the price is non-positive.
  */
-contract PriceFeedAdapter {
+contract PriceFeedAdapter is Ownable(msg.sender) {
     /// @notice Maximum age of a price update before it's considered stale (60 seconds).
     uint256 public constant STALE_THRESHOLD = 60 seconds;
 
@@ -28,7 +29,7 @@ contract PriceFeedAdapter {
      * @param asset  Human-readable asset key, e.g. "BTC/USD"
      * @param feed   AggregatorV3Interface contract address
      */
-    function setFeed(string calldata asset, address feed) external {
+    function setFeed(string calldata asset, address feed) external onlyOwner {
         feeds[asset] = AggregatorV3Interface(feed);
         emit FeedSet(asset, feed);
     }

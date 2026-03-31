@@ -3,13 +3,14 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
  * @title PayoutPool
  * @notice Holds per-asset liquidity for paying out winning trades.
  *         Only TapOrder (via PAYOUT_ROLE) can trigger payouts.
  */
-contract PayoutPool is AccessControl, Pausable {
+contract PayoutPool is AccessControl, Pausable, ReentrancyGuard {
     bytes32 public constant PAYOUT_ROLE = keccak256("PAYOUT_ROLE");
 
     /// @notice Per-asset liquidity balance.
@@ -46,6 +47,7 @@ contract PayoutPool is AccessControl, Pausable {
      */
     function withdraw(address asset, uint256 amount, address to)
         external
+        nonReentrant
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         require(balanceOf[asset] >= amount, "InsufficientBalance");

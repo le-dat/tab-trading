@@ -95,6 +95,10 @@ contract TapOrder is Ownable(msg.sender), Pausable, ReentrancyGuard {
     uint256 public constant DURATION_5M  = 300;
     uint256 public constant DURATION_15M = 900;
 
+    // Stake guards
+    uint256 public constant MIN_STAKE = 0.001 ether;
+    uint256 public constant MAX_STAKE = 0.1 ether;
+
     // -----------------------------------------------------------------------
     // Constructor
     // -----------------------------------------------------------------------
@@ -146,9 +150,7 @@ contract TapOrder is Ownable(msg.sender), Pausable, ReentrancyGuard {
 
         // Validate stake
         if (msg.value == 0) revert ZeroStake();
-
-        // Register this feed against the asset key in the adapter
-        priceFeedAdapter.setFeed(assetKey, feed);
+        if (msg.value < MIN_STAKE || msg.value > MAX_STAKE) revert ZeroStake();
 
         // Check pool can cover max payout
         uint256 payout = (msg.value * multiplierBps) / 10000;
@@ -227,9 +229,11 @@ contract TapOrder is Ownable(msg.sender), Pausable, ReentrancyGuard {
 
     /**
      * @notice Pauses the contract — no new orders accepted.
+     *         Also pauses the PayoutPool to prevent orphaned settlement state.
      */
     function pause() external onlyOwner {
         _pause();
+        payoutPool.pause();
         emit PausedToggled(true);
     }
 
@@ -238,6 +242,7 @@ contract TapOrder is Ownable(msg.sender), Pausable, ReentrancyGuard {
      */
     function unpause() external onlyOwner {
         _unpause();
+        payoutPool.unpause();
         emit PausedToggled(false);
     }
 

@@ -2,7 +2,7 @@
 
 > [ [CLAUDE.md](../CLAUDE.md) ] [ [Spec](spec-doc.md) ] [ [Architecture](architecture.md) ] [ [Plan](project-plan.md) ] [ [Status](project-status.md) ] [ [Changelog](changelog.md) ]
 
-> Claude updates this file at the START and END of each session via `/retro`.
+> Claude updates this file at the START and END of each session via `/checkpoint`.
 > Use this to resume context quickly after closing terminal.
 
 ---
@@ -16,7 +16,7 @@ Read docs/project-status.md and continue from where we left off.
 
 **End of session:** Run:
 ```
-/retro
+/checkpoint
 ```
 Claude will update "Last session" and "Next session" sections below.
 
@@ -32,23 +32,14 @@ Claude will update "Last session" and "Next session" sections below.
 
 ## Last Session
 
-**Date:** 2026-03-31
+**Date:** 2026-03-31 (second session)
 **Duration:** ~30 min
 **Completed:**
-- Phase 1 Smart Contracts COMPLETE: 23 Foundry tests passing, `forge build` clean, Hardhat compile + TypeChain (62 typings) ✅
-- Added 2 missing tests: `test_settleOrder_isPermissionless`, `test_settleOrder_revertsWhenFeedIsStale`
-- Fixed: stale feed test arithmetic underflow (needed `vm.warp` before `updateAnswerAndTimestamp`)
-- Fixed: missing `@nomicfoundation/hardhat-toolbox` → switched to `@nomicfoundation/hardhat-ethers` only (avoids Hardhat 3 migration chain)
-- Generated `docs/project-plan.md` (22 steps, 6 phases)
-
-**Decisions made:**
-- `batchSettle` uses `try this.settleOrder()` external call for per-order failure isolation
-- settleOrder is permissionless (anyone can call) — trustless, no single point of failure
-- multiplierBps in basis points (500 = 5x) for integer math
-
-**Bugs / blockers encountered:**
-- Stale feed test arithmetic underflow — fixed with `vm.warp(block.timestamp + 61 seconds)` before updating mock
-- Hardhat toolbox dependency hell — fixed by using just `@nomicfoundation/hardhat-ethers`
+- Phase 1 contract hardening: ReentrancyGuard on PayoutPool.withdraw(), Ownable + onlyOwner on PriceFeedAdapter.setFeed(), MIN_STAKE/MAX_STAKE guards in TapOrder (0.001–0.1 ETH)
+- TapOrder.pause()/unpause() now coordinate with PayoutPool.pause()/unpause()
+- deploy.ts updated to grant TapOrder DEFAULT_ADMIN_ROLE on PayoutPool (needed for pause coordination)
+- 57 Foundry tests passing (34 from TapOrderSecurityTest + 23 from TapOrderTest), `forge build` clean, Hardhat compile + TypeChain ✅
+- Phase 1 fully complete with security hardening pass
 
 ---
 
@@ -82,14 +73,15 @@ Then create TypeORM migrations for users, orders, settlements, payments tables.
 | Feature | Status | Notes |
 |---|---|---|
 | Monorepo scaffold | ✅ done | yarn workspaces, apps/contracts/backend/frontend exist |
-| TapOrder.sol | ✅ done | createOrder, settleOrder, batchSettle, pause/unpause |
-| PriceFeedAdapter.sol | ✅ done | 60s stale threshold, Chainlink wrapper |
-| PayoutPool.sol | ✅ done | PAYOUT_ROLE access control |
-| Contract tests | ✅ done | 23 Foundry tests passing |
+| TapOrder.sol | ✅ done | createOrder, settleOrder, batchSettle, pause/unpause, nonReentrant, stake limits |
+| PriceFeedAdapter.sol | ✅ done | 60s stale threshold, Chainlink wrapper, Ownable |
+| PayoutPool.sol | ✅ done | PAYOUT_ROLE access control, ReentrancyGuard, pause coordination |
+| Contract tests | ✅ done | 57 Foundry tests passing (23 + 34 security tests) |
 | TypeChain bindings | ✅ done | 62 typings via `yarn typechain:gen` |
+| deploy.ts | ✅ done | Updated with DEFAULT_ADMIN_ROLE grant for pause coordination |
 | Docker Compose infra | ⬜ not started | Phase 2 |
 | TypeORM migrations | ⬜ not started | Phase 2 |
-| BASE Sepolia deploy | ⬜ not started | |
+| BASE Sepolia deploy | ⬜ not started | Phase 5 |
 | Backend: auth | ⬜ not started | Phase 3 |
 | Backend: price | ⬜ not started | Phase 3 |
 | Backend: order | ⬜ not started | Phase 3 |
@@ -116,6 +108,9 @@ Status key: ⬜ not started · 🔄 in progress · ✅ done · ❌ blocked
 | 4 | Hardhat toolbox dependency hell | Use only `@nomicfoundation/hardhat-ethers` (not full toolbox) to avoid Hardhat 3 Ignition chain | 2026-03-31 |
 | 5 | batchSettle failure isolation | `try this.settleOrder()` external call pattern — one bad order doesn't revert batch | 2026-03-31 |
 | 6 | settleOrder is permissionless | Anyone can call — trustless settlement, no single point of failure | 2026-03-31 |
+| 7 | Reentrancy attack surface | Added ReentrancyGuard to PayoutPool.withdraw(), Ownable on PriceFeedAdapter.setFeed() | 2026-03-31 |
+| 8 | PayoutPool pause coordination | TapOrder.pause()/unpause() now call PayoutPool.pause()/unpause() to prevent orphaned settlement state | 2026-03-31 |
+| 9 | Stake limits | MIN_STAKE 0.001 ETH / MAX_STAKE 0.1 ETH enforced in TapOrder.createOrder() | 2026-03-31 |
 
 ---
 
