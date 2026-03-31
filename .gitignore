@@ -14,6 +14,10 @@ node_modules/
 out/
 dist/
 build/
+artifacts/
+cache/
+typechain-types/
+broadcast/
 
 # Logs
 *.log

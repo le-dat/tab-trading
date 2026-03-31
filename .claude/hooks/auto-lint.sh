@@ -1,11 +1,11 @@
 #!/bin/bash
-# Hook: Tự động lint sau khi edit/write file
-# Chỉ lint file vừa thay đổi để nhanh hơn
+# Hook: Automatically lint after editing/writing a file
+# Only lints the changed file for faster performance
 
 CHANGED_FILE="$1"
 
 if [ -f "package.json" ] && [ -n "$CHANGED_FILE" ]; then
-  # Chỉ lint file .ts, .tsx, .js, .jsx
+  # Only lint .ts, .tsx, .js, .jsx files
   if [[ "$CHANGED_FILE" =~ \.(ts|tsx|js|jsx)$ ]]; then
     npx eslint "$CHANGED_FILE" --fix --quiet 2>/dev/null
   fi

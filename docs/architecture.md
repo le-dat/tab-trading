@@ -1,11 +1,15 @@
 # Tap Trading — System Architecture
 
+> [ [CLAUDE.md](../CLAUDE.md) ] [ [Spec](spec-doc.md) ] [ [Architecture](architecture.md) ] [ [Plan](project-plan.md) ] [ [Status](project-status.md) ] [ [Changelog](changelog.md) ]
+
 > Update this file after any major system change.
 > Claude reads this to understand how the system is structured.
 
 ---
 
 ## High-Level Overview
+
+Derived from [Project Specification](spec-doc.md).
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -41,11 +45,11 @@ tap-trading/                        ← monorepo root
 │   ├── commands/                   ← slash commands
 │   ├── agents/                     ← subagents
 │   └── hooks/                      ← automation hooks
-├── docs/
-│   ├── spec-doc.md                 ← this project's spec
-│   ├── architecture.md             ← this file
-│   ├── changelog.md                ← feature history
-│   └── project-status.md          ← session tracking
+├── [docs/]()
+│   ├── [spec-doc.md](spec-doc.md)                 ← this project's spec
+│   ├── [architecture.md](architecture.md)             ← this file
+│   ├── [changelog.md](changelog.md)                ← feature history
+│   └── [project-status.md](project-status.md)          ← session tracking
 ├── apps/
 │   ├── contracts/                  ← Hardhat project
 │   │   ├── contracts/

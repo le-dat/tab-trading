@@ -1,14 +1,14 @@
 # Command: backend-module
 
-## Mô tả
-Tạo một NestJS module mới theo đúng pattern chuẩn của tapl-chainlink backend.
+## Description
+Create a new NestJS module following the correct standard pattern for the tapl-chainlink backend.
 
-## Khi được yêu cầu tạo module mới, LUÔN tạo đủ các file sau:
+## When asked to create a new module, ALWAYS create all of the following files:
 
 ```
 src/modules/{module-name}/
   {module-name}.module.ts
-  {module-name}.controller.ts   (nếu có REST API)
+  {module-name}.controller.ts   (if there is a REST API)
   {module-name}.service.ts
   {module-name}.repository.ts
   entities/
@@ -168,8 +168,8 @@ describe('{ModuleName}Service', () => {
 });
 ```
 
-## Sau khi tạo module, nhớ:
-1. Import vào `app.module.ts`
-2. Chạy `yarn migration:generate` nếu có entity mới
-3. Thêm Kafka consumer nếu module cần lắng nghe events từ module khác
-4. Với modules liên quan đến EVM (payment, settlement): inject `TapOrderAdapter` từ `adapters/`
+## After creating the module, remember to:
+1. Import it into `app.module.ts`
+2. Run `yarn migration:generate` if there is a new entity
+3. Add a Kafka consumer if the module needs to listen for events from other modules
+4. For modules related to EVM (payment, settlement): inject `TapOrderAdapter` from `adapters/`

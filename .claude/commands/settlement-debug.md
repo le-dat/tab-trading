@@ -1,30 +1,30 @@
 # Command: settlement-debug
 
-## Mô tả
-Debug khi settlement không hoạt động đúng — order không được settle dù price đã touch target.
+## Description
+Debug when settlement is not working correctly — an order is not settled even though the price has touched the target.
 
-## Checklist debug theo thứ tự
+## Debug checklist in order
 
-### 1. Kiểm tra Price Feed có đang update
+### 1. Check if Price Feed is updating
 ```bash
-# Redis: xem giá mới nhất
+# Redis: view the latest price
 redis-cli GET "price:BTC/USD"
 # Expected: { "value": "65000.12345678", "updatedAt": 1234567890000 }
-# Nếu null → worker price chưa chạy hoặc Chainlink event chưa fire
+# If null → price worker has not started or Chainlink event has not fired
 
 # Worker logs
 docker logs tap-worker --tail 100 | grep "price"
 ```
 
-### 2. Kiểm tra Settlement Worker đang chạy
+### 2. Check if Settlement Worker is running
 ```bash
 docker logs tap-worker --tail 100 | grep "settlement"
-# Expected: "Checking 5 open orders" mỗi 100ms
-# Nếu không có log → worker process chết, restart
+# Expected: "Checking 5 open orders" every 100ms
+# If no log → worker process has died, restart it
 docker restart tap-worker
 ```
 
-### 3. Kiểm tra Order status trong DB
+### 3. Check Order status in DB
 ```sql
 SELECT id, asset, target_price, current_price_at_create,
        is_above, expiry, status, tx_hash
@@ -33,15 +33,15 @@ WHERE status = 'OPEN'
 ORDER BY created_at DESC;
 ```
 
-### 4. Kiểm tra Contract trực tiếp
+### 4. Check Contract directly
 ```bash
 cd apps/contracts
-# Kiểm tra order on-chain
+# Check order on-chain
 yarn hardhat run scripts/check-order.ts --network base-sepolia
 # Expected output: { orderId, status, currentPrice, targetPrice }
 ```
 
-### 5. Kiểm tra RPC connectivity
+### 5. Check RPC connectivity
 ```typescript
 // scripts/check-rpc.ts
 const provider = new ethers.JsonRpcProvider(process.env.RPC);
@@ -55,32 +55,32 @@ console.log('BTC price:', price.answer.toString());
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| Price không update | Chainlink WS disconnect | Restart worker, check RPC WebSocket |
-| Order không settle dù price touched | Worker không chạy | `docker restart tap-worker` |
-| Settlement tx reverts | Stale price (>60s old) | Check `updatedAt` trong price cache |
-| Settlement tx reverts | Order đã settled | Check idempotency guard trong contract |
-| Payout không về ví user | PayoutPool thiếu liquidity | Nạp thêm ETH vào pool contract |
-| Gas estimation fails | RPC rate limit | Upgrade RPC plan hoặc đổi provider |
-| batchSettle chỉ settle một phần | Gas limit quá thấp | Giảm batch size xuống còn 10-20 orders |
+| Price not updating | Chainlink WS disconnect | Restart worker, check RPC WebSocket |
+| Order not settled despite price touching target | Worker not running | `docker restart tap-worker` |
+| Settlement tx reverts | Stale price (>60s old) | Check `updatedAt` in price cache |
+| Settlement tx reverts | Order already settled | Check idempotency guard in contract |
+| Payout not sent to user's wallet | PayoutPool lacks liquidity | Add more ETH to the pool contract |
+| Gas estimation fails | RPC rate limit | Upgrade RPC plan or switch provider |
+| batchSettle only partially settles | Gas limit too low | Reduce batch size to 10-20 orders |
 
 ### 7. Simulate settlement manually
 ```bash
 cd apps/contracts
-# Gọi settleOrder trực tiếp để test
+# Call settleOrder directly to test
 yarn hardhat run scripts/manual-settle.ts --network base-sepolia -- --orderId 42
 ```
 
-### 8. Kiểm tra idempotency
+### 8. Check idempotency
 ```typescript
-// Gọi settleOrder 2 lần cùng orderId → lần 2 phải revert với "Already settled"
-// Nếu không revert → bug nghiêm trọng, dừng production ngay
+// Call settleOrder twice with the same orderId → second call must revert with "Already settled"
+// If it does NOT revert → critical bug, stop production immediately
 const tx1 = await contract.settleOrder(orderId); // OK
-const tx2 = await contract.settleOrder(orderId); // phải throw
+const tx2 = await contract.settleOrder(orderId); // must throw
 ```
 
-### 9. Emergency: Pause platform nếu settlement bị exploit
+### 9. Emergency: Pause platform if settlement is being exploited
 ```bash
-# Gọi pause() trên contract
+# Call pause() on the contract
 yarn hardhat run scripts/pause.ts --network base-sepolia
-# Sau đó update frontend banner để thông báo users
+# Then update the frontend banner to notify users
 ```

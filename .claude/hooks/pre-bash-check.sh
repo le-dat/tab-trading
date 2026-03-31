@@ -1,10 +1,10 @@
 #!/bin/bash
-# Hook: Kiểm tra trước khi chạy Bash command nguy hiểm
-# Ngăn các lệnh có thể gây hại
+# Hook: Check before running a dangerous Bash command
+# Blocks commands that could cause harm
 
 COMMAND="$1"
 
-# Kiểm tra các pattern nguy hiểm
+# Check for dangerous patterns
 DANGEROUS_PATTERNS=(
   "rm -rf /"
   "git push --force origin main"
@@ -15,8 +15,8 @@ DANGEROUS_PATTERNS=(
 
 for pattern in "${DANGEROUS_PATTERNS[@]}"; do
   if echo "$COMMAND" | grep -qi "$pattern"; then
-    echo "🚫 BLOCKED: Lệnh nguy hiểm được phát hiện: '$pattern'"
-    echo "Vui lòng xác nhận thủ công nếu bạn thực sự muốn chạy lệnh này."
+    echo "🚫 BLOCKED: Dangerous command detected: '$pattern'"
+    echo "Please confirm manually if you really want to run this command."
     exit 1
   fi
 done

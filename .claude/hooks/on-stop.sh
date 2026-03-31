@@ -1,25 +1,25 @@
 #!/bin/bash
-# Hook: Chạy sau khi Claude kết thúc task
-# Kiểm tra tests có pass không trước khi kết thúc
+# Hook: Runs after Claude finishes a task
+# Checks if tests pass before ending
 
-echo "🔍 Chạy kiểm tra sau task..."
+echo "🔍 Running post-task checks..."
 
-# Chạy lint nếu có package.json
+# Run lint if package.json exists
 if [ -f "package.json" ]; then
   if npm run lint --silent 2>/dev/null; then
     echo "✅ Lint passed"
   else
-    echo "⚠️  Lint có lỗi — hãy review trước khi commit"
+    echo "⚠️  Lint has errors — please review before committing"
   fi
 fi
 
-# Chạy type check nếu có tsconfig
+# Run type check if tsconfig exists
 if [ -f "tsconfig.json" ]; then
   if npx tsc --noEmit --quiet 2>/dev/null; then
     echo "✅ TypeScript OK"
   else
-    echo "⚠️  TypeScript errors — cần fix trước khi deploy"
+    echo "⚠️  TypeScript errors — fix before deploying"
   fi
 fi
 
-echo "✅ Hook on-stop hoàn thành"
+echo "✅ Hook on-stop complete"

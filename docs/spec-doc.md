@@ -1,5 +1,7 @@
 # Tap Trading — Project Specification
 
+> [ [CLAUDE.md](../CLAUDE.md) ] [ [Spec](spec-doc.md) ] [ [Architecture](architecture.md) ] [ [Plan](project-plan.md) ] [ [Status](project-status.md) ] [ [Changelog](changelog.md) ]
+
 > Phase 1 document. Complete this before writing any code.
 > Claude reads this file to understand what to build.
 
@@ -16,6 +18,8 @@ Build a mobile-first gamified trading platform where users predict whether a mar
 ---
 
 ## Milestone 1 — MVP (Weeks 1–8)
+
+See detailed [Project Plan](project-plan.md) for implementation steps.
 
 ### Must have
 
@@ -103,6 +107,8 @@ House edge covers losses when multiple users win simultaneously.
 ---
 
 ## Tech Stack
+
+See [Architecture Document](architecture.md) for system design and data flow.
 
 | Layer             | Technology                            |
 | ----------------- | ------------------------------------- |

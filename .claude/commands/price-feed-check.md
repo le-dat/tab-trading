@@ -1,7 +1,7 @@
 # Command: price-feed-check
 
-## Mô tả
-Kiểm tra Chainlink price feed hoạt động đúng trên BASE network trước khi tạo order mới.
+## Description
+Check that Chainlink price feeds are working correctly on the BASE network before creating a new order.
 
 ## Quick check script
 ```typescript
@@ -65,9 +65,9 @@ LINK/USD: 0xb113F5A928BCfF189C998ab20d753a47F9dE5A61
 BTC/USD:  0xCCADC697c55bbB68dc5bCdf8d3CBe83CdD4E071E
 ETH/USD:  0x71041dddad3595F9CEd3dCCFBe3D1F4b0a16Bb70
 ```
-> Xem thêm tại: https://docs.chain.link/data-feeds/price-feeds/addresses?network=base
+> See more at: https://docs.chain.link/data-feeds/price-feeds/addresses?network=base
 
-## Stale price thresholds (dùng trong backend)
+## Stale price thresholds (used in backend)
 ```typescript
 // src/modules/price/price.constants.ts
 export const STALE_THRESHOLDS_MS: Record<string, number> = {
@@ -76,7 +76,7 @@ export const STALE_THRESHOLDS_MS: Record<string, number> = {
   'XAU/USD': 3_600_000, // 1 hour
 };
 
-// Validate trong PriceService trước khi cho phép tạo order
+// Validate in PriceService before allowing order creation
 export function assertPriceFresh(asset: string, updatedAt: number): void {
   const threshold = STALE_THRESHOLDS_MS[asset] ?? 60_000;
   if (Date.now() - updatedAt > threshold) {
@@ -85,26 +85,26 @@ export function assertPriceFresh(asset: string, updatedAt: number): void {
 }
 ```
 
-## Kiểm tra trong Worker logs
+## Check in Worker logs
 ```bash
-# Price feed đang hoạt động bình thường
+# Price feed is working normally
 docker logs tap-worker --tail 50 | grep "price"
 # Expected:
 # [PriceWorker] BTC/USD updated: 65432.10 (age: 12s)
 # [PriceWorker] ETH/USD updated: 3456.78 (age: 8s)
 
-# Dấu hiệu stale:
+# Signs of staleness:
 # [PriceWorker] ⚠ BTC/USD stale: last update 95s ago
 ```
 
-## Incident response khi feed ngừng update
+## Incident response when feed stops updating
 ```
 1. Check Chainlink status: https://status.chain.link
-2. Pause nhận order mới:
+2. Pause new order acceptance:
    await contract.pause()                     // on-chain
    await redis.set('system:paused', 'true')   // backend gate
-3. Thêm banner trên frontend: "Trading temporarily paused"
-4. Chờ feed recover → verify ageSeconds < threshold
+3. Add banner on frontend: "Trading temporarily paused"
+4. Wait for feed to recover → verify ageSeconds < threshold
 5. Unpause:
    await contract.unpause()
    await redis.del('system:paused')
