@@ -53,8 +53,8 @@ Target: [Milestone 1 — MVP](spec-doc.md#milestone-1--mvp-weeks-18) (~8 weeks)
 ## Phase 2 — Infrastructure (~3 days)
 ### Step 6: Set up Docker Compose for local dev
 - Command: /dev-setup
-- Run: `docker compose up -d` (after writing docker-compose.yml)
-- Done when: `docker compose ps` shows Postgres ✅, Redis ✅, Kafka ✅, MinIO ✅
+- Run: `cd be && docker compose -f docker-compose.yml --env-file docker.env up -d`
+- Done when: `cd be && docker compose -f docker-compose.yml --env-file docker.env ps` shows all healthy
 - Dependency: None
 - Note: Ports mapped non-standard (5434, 6380, 29093, 2182, 9002/9003) to avoid conflicts with existing containers
 

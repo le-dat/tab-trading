@@ -2,19 +2,5 @@
   "name": "tap-trading",
   "version": "0.1.0",
   "private": true,
-  "workspaces": [
-    "be",
-    "fe",
-    "smc",
-    "packages/*"
-  ],
-  "scripts": {
-    "dev": "yarn workspace @tap/be dev",
-    "dev:worker": "yarn workspace @tap/be dev:worker",
-    "frontend": "yarn workspace @tap/fe dev",
-    "contracts:build": "yarn workspace @tap/smc foundry:build",
-    "contracts:test": "yarn workspace @tap/smc foundry:test",
-    "contracts:compile": "yarn workspace @tap/smc compile",
-    "typechain": "yarn workspace @tap/smc typechain:gen"
-  }
+  "description": "Mobile-first gamified price-touch trading platform"
 }

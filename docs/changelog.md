@@ -21,11 +21,11 @@ Claude will add an entry to this file with: what was built, key decisions made, 
 
 ### Phase 2 — Infrastructure
 - `docker-compose.yml`: Postgres (:5434), Redis (:6380), Kafka (:29093), Zookeeper (:2182), MinIO (:9002/:9003) — all healthy
-- `Makefile`: 25 targets — `make infra-up`, `make dev`, `make contracts-test`, `make backend`, etc.
+- CLI-only dev: removed `Makefile` — use `docker compose`, `yarn`, `forge` directly
 - `docker.env` / `docker.env.example`: credential templates (gitignored)
 - `.env.example`: replaced generic template with full Tap Trading vars (Postgres :5434, Redis :6380, Kafka :29093)
 - `.gitignore`: added `docker.env`, `postgres_data/`, `redis_data/`, `minio_data/`
-- Root `package.json`: monorepo workspaces (`smc`, `be`, `fe`)
+- Root `package.json`: project metadata (no workspaces — each package manages its own deps)
 - `be/`: NestJS scaffold — `main.ts`, `app.module.ts`, `data-source.ts`, `Order` entity
 
 ### Phase 1 — Contract Hardening
@@ -68,7 +68,7 @@ _Phase 1 complete — 2026-03-31_
 _To be filled after Phase 2 completion._
 
 ### Added
-- NestJS monorepo setup: API (:3001) + Worker (:3002)
+- NestJS backend setup: API (:3001) + Worker (:3002)
 - auth module: Privy verify → JWT issue
 - price module: Chainlink event listener → Redis cache → Kafka publish
 - order module: create/query with risk validation

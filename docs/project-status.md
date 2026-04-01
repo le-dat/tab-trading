@@ -36,10 +36,10 @@ Claude will update "Last session" and "Next session" sections below.
 **Duration:** ~30 min
 **Completed:**
 - Created `docker-compose.yml` with Postgres (:5434), Redis (:6380), Kafka (:29093), Zookeeper, MinIO — all running and healthy
-- Created `Makefile` with 25 targets (`make infra-up`, `make dev`, `make contracts-test`, `make backend`, etc.)
+- Removed `Makefile` — using CLI commands directly (`docker compose`, `yarn`, `forge`)
 - Created `docker.env` + `docker.env.example` credential templates (gitignored)
 - Replaced generic `.env.example` with Tap Trading-specific vars aligned to Docker ports
-- Created root `package.json` for monorepo workspaces
+- Replaced root `package.json` — no workspaces (each package manages its own deps)
 - Created `be/` NestJS scaffold: `main.ts`, `app.module.ts`, `data-source.ts`, `Order` entity
 - Updated `.gitignore` to exclude `docker.env` and Docker volume dirs
 
@@ -53,16 +53,16 @@ Claude will update "Last session" and "Next session" sections below.
 
 **First command to run:**
 ```bash
-make infra-up   # Docker already running — verify with: make docker-status
+cd be && docker compose -f docker-compose.yml --env-file docker.env ps
 ```
 
 **Exact prompt to give Claude:**
 ```
 Finish Phase 2: Infrastructure.
-1. Run `make infra-up` to verify all 5 Docker services are healthy
-2. Run `yarn install` in monorepo root
+1. Run `cd be && docker compose -f docker-compose.yml --env-file docker.env up -d` to start infra
+2. Run `cd be && yarn install` (and `cd smc && yarn install` if needed)
 3. Create remaining TypeORM entities (User, Settlement, Payment)
-4. Run `make db-migrate-up` to apply migrations
+4. Run `cd be && yarn migration:up` to apply migrations
 5. Then scaffold the NestJS modules: auth, order, price, settlement, socket
 ```
 
@@ -77,7 +77,7 @@ Finish Phase 2: Infrastructure.
 
 | Feature | Status | Notes |
 |---|---|---|
-| Monorepo scaffold | ✅ done | yarn workspaces, smc/be/fe exist |
+| Project scaffold | ✅ done | smc/be/fe packages, each with own package.json |
 | TapOrder.sol | ✅ done | createOrder, settleOrder, batchSettle, pause/unpause, nonReentrant, stake limits |
 | PriceFeedAdapter.sol | ✅ done | 60s stale threshold, Chainlink wrapper, Ownable |
 | PayoutPool.sol | ✅ done | PAYOUT_ROLE access control, ReentrancyGuard, pause coordination |
@@ -85,7 +85,7 @@ Finish Phase 2: Infrastructure.
 | TypeChain bindings | ✅ done | 62 typings via `yarn typechain:gen` |
 | deploy.ts | ✅ done | Updated with DEFAULT_ADMIN_ROLE grant for pause coordination |
 | Docker Compose infra | 🔄 done | Postgres :5434, Redis :6380, Kafka :29093, MinIO :9002/:9003 — all healthy |
-| Makefile | ✅ done | 25 targets covering infra, contracts, backend, deploy |
+| Makefile | ❌ removed | CLI-only approach — docker compose + yarn + forge directly |
 | NestJS backend scaffold | 🔄 in progress | `main.ts`, `app.module.ts`, `data-source.ts`, `Order` entity exist |
 | TypeORM migrations | ⬜ not started | Phase 2 |
 | BASE Sepolia deploy | ⬜ not started | Phase 5 |

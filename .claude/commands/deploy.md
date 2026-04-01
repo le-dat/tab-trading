@@ -5,7 +5,7 @@ Deploy the Tap Trading platform to production — smart contracts on BASE Mainne
 
 ## Pre-deploy checklist
 ```
-[ ] All tests pass: yarn test (all workspaces)
+[ ] All tests pass: `cd be && yarn test` && `cd smc && forge test`
 [ ] Contract has been thoroughly internally reviewed
 [ ] Production .env is correctly configured (mainnet RPC, ADMIN_PRIVATE_KEY)
 [ ] ADMIN_PRIVATE_KEY wallet has enough ETH to pay gas (minimum 0.1 ETH)

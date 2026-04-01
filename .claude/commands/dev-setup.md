@@ -20,7 +20,7 @@ docker compose -f be/docker-compose.yml --env-file be/docker.env ps  # check all
 
 ### Step 2: Install dependencies
 ```bash
-yarn install  # root workspaces — installs all be, fe, smc, and packages/*
+cd be && yarn install  # install be/ deps (run separately per package if needed)
 ```
 
 ### Step 3: Generate contract TypeScript bindings

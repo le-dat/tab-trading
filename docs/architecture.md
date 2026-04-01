@@ -38,58 +38,44 @@ Derived from [Project Specification](spec-doc.md).
 ## Repository Structure
 
 ```
-tap-trading/                        ← monorepo root
+tap-trading/                        ← project root (NOT a monorepo — each package manages own deps)
 ├── CLAUDE.md                       ← Claude's memory
 ├── .claude/
-│   ├── settings.json
 │   ├── commands/                   ← slash commands
 │   ├── agents/                     ← subagents
 │   └── hooks/                      ← automation hooks
-├── [docs/]()
-│   ├── [spec-doc.md](spec-doc.md)                 ← this project's spec
-│   ├── [architecture.md](architecture.md)             ← this file
-│   ├── [changelog.md](changelog.md)                ← feature history
-│   └── [project-status.md](project-status.md)          ← session tracking
-├── apps/
-│   ├── contracts/                  ← Hardhat project
-│   │   ├── contracts/
-│   │   │   ├── TapOrder.sol
-│   │   │   ├── PriceFeedAdapter.sol
-│   │   │   ├── PayoutPool.sol
-│   │   │   └── mocks/MockV3Aggregator.sol
-│   │   ├── test/
-│   │   ├── scripts/
-│   │   └── typechain-types/        ← auto-generated, do not edit
-│   │
-│   ├── backend/
-│   │   └── src/
-│   │       ├── adapters/           ← EVM contract adapters
-│   │       ├── config/             ← NestJS config modules
-│   │       ├── libs/               ← shared libs (logger, utils)
-│   │       ├── migrations/         ← TypeORM migrations
-│   │       ├── modules/
-│   │       │   ├── auth/           ← Privy JWT auth
-│   │       │   ├── account/        ← user account management
-│   │       │   ├── order/          ← order lifecycle
-│   │       │   ├── settlement/     ← auto-settlement worker
-│   │       │   ├── payment/        ← deposit/withdraw
-│   │       │   ├── distribution/   ← payout distribution
-│   │       │   ├── price/          ← Chainlink price ingestion
-│   │       │   ├── risk/           ← risk checks, exposure limits
-│   │       │   ├── strategy/       ← multiplier pricing
-│   │       │   ├── socket/         ← Socket.io gateway
-│   │       │   └── worker/         ← background jobs
-│   │       └── scripts/
-│   │
-│   └── frontend/
+├── docs/                           ← project documentation
+├── be/                             ← NestJS backend (Docker infra lives here)
+│   ├── docker-compose.yml          ← Postgres :5434, Redis :6380, Kafka :29093, MinIO :9002
+│   ├── docker.env                  ← Docker secrets (gitignored)
+│   ├── package.json
+│   └── src/
+│       ├── entities/               ← TypeORM entities (Order, User, Settlement, Payment)
+│       ├── modules/                ← NestJS modules (auth, order, settlement, price, kafka, ...)
+│       ├── adapters/               ← EVM contract adapters (TapOrder, PayoutPool)
+│       ├── config/                 ← data-source.ts, app config
+│       ├── migrations/             ← TypeORM migrations
+│       └── main.ts
+├── smc/                            ← Foundry + Hardhat smart contracts
+│   ├── contracts/
+│   │   ├── TapOrder.sol
+│   │   ├── PriceFeedAdapter.sol
+│   │   ├── PayoutPool.sol
+│   │   └── mocks/MockV3Aggregator.sol
+│   ├── test/                       ← Foundry tests
+│   ├── scripts/                    ← deploy.ts, fund-pool.ts
+│   ├── typechain-types/            ← auto-generated TypeChain bindings
+│   └── package.json
+├── fe/                             ← Next.js frontend (to be scaffolded)
+│   ├── package.json
+│   └── src/
 │       └── app/
 │           ├── (auth)/             ← login screen
 │           ├── (trading)/          ← main trade screen
-│           ├── (history)/          ← trade history
+│           ├── (history)/           ← trade history
 │           └── (wallet)/           ← balance & wallet
-│
 └── packages/
-    └── shared/                     ← shared TypeScript types, ABIs, utils
+    └── shared/                     ← shared TypeScript types, ABIs (stub, not yet used)
 ```
 
 ---
@@ -205,49 +191,58 @@ Key functions:
 
 ## Database Schema
 
+See `be/src/entities/` for actual TypeORM entity definitions.
+
 ```sql
--- Core tables
+-- Core tables (as implemented)
 
 users (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  wallet_address  VARCHAR(42) UNIQUE NOT NULL,
-  created_at      TIMESTAMPTZ DEFAULT NOW(),
-  updated_at      TIMESTAMPTZ DEFAULT NOW()
+  user_address    VARCHAR(42) PRIMARY KEY,  -- EOA wallet address
+  privy_user_id   VARCHAR(42),              -- Privy user ID (nullable)
+  wallet_address  VARCHAR(42),               -- derived EOA (nullable)
+  balance_wei    NUMERIC(78,0) DEFAULT 0,
+  total_deposited_wei  NUMERIC(78,0) DEFAULT 0,
+  total_withdrawn_wei NUMERIC(78,0) DEFAULT 0,
+  is_banned      BOOLEAN DEFAULT FALSE,
+  created_at     TIMESTAMPTZ DEFAULT NOW()
 )
 
 orders (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id         UUID REFERENCES users(id),
-  asset           VARCHAR(20) NOT NULL,       -- 'BTC/USD'
-  target_price    NUMERIC(20,8) NOT NULL,
-  is_above        BOOLEAN NOT NULL,
-  stake_wei       NUMERIC(30,0) NOT NULL,     -- in wei
-  multiplier_bps  INTEGER NOT NULL,           -- 500 = 5x
-  expiry          TIMESTAMPTZ NOT NULL,
-  status          VARCHAR(10) DEFAULT 'OPEN', -- OPEN|WON|LOST
-  on_chain_id     BIGINT,                     -- contract orderId
-  create_tx_hash  VARCHAR(66),
-  settle_tx_hash  VARCHAR(66),
-  created_at      TIMESTAMPTZ DEFAULT NOW(),
-  updated_at      TIMESTAMPTZ DEFAULT NOW()
+  id              UUID PRIMARY KEY,          -- TypeORM generated
+  user_address    VARCHAR(42) NOT NULL,     -- EOA wallet
+  order_id_on_contract BIGINT NOT NULL,     -- contract's orderId
+  asset          VARCHAR(20) NOT NULL,      -- 'BTC/USD'
+  target_price   BIGINT NOT NULL,          -- stored as bigint
+  is_above       BOOLEAN NOT NULL,
+  duration       INTEGER NOT NULL,          -- seconds
+  multiplier_bps INTEGER NOT NULL,          -- 500 = 5x payout
+  stake_wei      NUMERIC(78,0) NOT NULL,
+  status         VARCHAR(10) DEFAULT 'open', -- open|won|lost
+  expiry_timestamp BIGINT NOT NULL,
+  settled_at     TIMESTAMPTZ,
+  settled_by     VARCHAR(42),
+  payout_wei     NUMERIC(78,0),
+  created_at     TIMESTAMPTZ DEFAULT NOW()
 )
 
 settlements (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id              UUID PRIMARY KEY,
   order_id        UUID REFERENCES orders(id) UNIQUE,
-  settled_at      TIMESTAMPTZ,
-  payout_wei      NUMERIC(30,0),
-  tx_hash         VARCHAR(66),
-  created_at      TIMESTAMPTZ DEFAULT NOW()
+  settled_by      VARCHAR(42) NOT NULL,
+  payout_wei      NUMERIC(78,0) NOT NULL,
+  fee_wei         NUMERIC(78,0) DEFAULT 0,
+  settled_at      TIMESTAMPTZ NOT NULL
 )
 
 payments (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id         UUID REFERENCES users(id),
-  type            VARCHAR(20),  -- DEPOSIT | WITHDRAW | PAYOUT
-  amount_wei      NUMERIC(30,0),
+  id              UUID PRIMARY KEY,
+  user_address    VARCHAR(42) NOT NULL,
+  type            VARCHAR(20) NOT NULL,    -- deposit|withdrawal
+  status          VARCHAR(20) DEFAULT 'pending', -- pending|completed|failed
+  amount_wei      NUMERIC(78,0) NOT NULL,
   tx_hash         VARCHAR(66),
-  created_at      TIMESTAMPTZ DEFAULT NOW()
+  completed_at    TIMESTAMPTZ,
+  created_at     TIMESTAMPTZ DEFAULT NOW()
 )
 ```
 
