@@ -1,8 +1,11 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { parseEther } from 'ethers';
 import { Order, OrderStatus } from '../../entities/order.entity';
+import { User } from '../../entities/user.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { TapOrderAdapter } from '../../adapters/tap-order.adapter';
 
 const MAX_CONCURRENT_ORDERS = 5;
 
@@ -11,9 +14,21 @@ export class OrderService {
   constructor(
     @InjectRepository(Order)
     private orderRepository: Repository<Order>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+    @Inject(TapOrderAdapter)
+    private tapOrderAdapter: TapOrderAdapter,
   ) {}
 
-  async create(dto: CreateOrderDto, userAddress: string): Promise<Order> {
+  async create(dto: CreateOrderDto, userAddress: string, userId?: string): Promise<Order> {
+    // Resolve userId from wallet address if not provided
+    const user = await this.userRepository.findOne({
+      where: userId ? { id: userId, walletAddress: userAddress } : { walletAddress: userAddress },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found — please register first');
+    }
+
     // Check concurrent order limit
     const openOrders = await this.orderRepository.count({
       where: { userAddress, status: OrderStatus.OPEN },
@@ -25,9 +40,28 @@ export class OrderService {
       );
     }
 
+    // Submit transaction to contract first
+    const { orderId, expiry } = await this.tapOrderAdapter.createOrder({
+      assetKey: dto.asset,
+      targetPrice: BigInt(dto.targetPrice),
+      isAbove: dto.isAbove,
+      durationSecs: dto.duration,
+      multiplierBps: dto.multiplierBps,
+      stakeWei: parseEther(dto.stakeWei),
+    });
+
+    // Save order to DB after successful on-chain submission
     const order = this.orderRepository.create({
-      ...dto,
+      asset: dto.asset,
+      targetPrice: dto.targetPrice,
+      isAbove: dto.isAbove,
+      duration: dto.duration,
+      multiplierBps: dto.multiplierBps,
+      stakeWei: dto.stakeWei,
+      expiryTimestamp: expiry.toString(),
       userAddress,
+      userId: user.id,
+      orderIdOnContract: orderId.toString(),
       status: OrderStatus.OPEN,
     });
 

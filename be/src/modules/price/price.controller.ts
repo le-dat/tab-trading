@@ -1,12 +1,14 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { PriceService } from './price.service';
+import { Public } from '../../decorators/public.decorator';
 
 @ApiTags('prices')
 @Controller('prices')
 export class PriceController {
   constructor(private priceService: PriceService) {}
 
+  @Public()
   @Get(':asset')
   @ApiOperation({ summary: 'Get current price for an asset' })
   @ApiParam({ name: 'asset', description: 'Asset symbol (e.g., BTC_USD, ETH_USD)' })

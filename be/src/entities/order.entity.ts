@@ -24,6 +24,9 @@ export class Order {
   @Index()
   userAddress: string;
 
+  @Column({ name: 'user_id', type: 'uuid' })
+  userId: string;
+
   @Column({ name: 'order_id_on_contract', type: 'bigint' })
   @Index()
   orderIdOnContract: string;

@@ -9,7 +9,11 @@
     "target": "ES2021",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
+    "baseUrl": "./src",
+    "paths": {
+      "smc-typechain": ["../../../smc/typechain-types"],
+      "smc-typechain/*": ["../../../smc/typechain-types/*"]
+    },
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,

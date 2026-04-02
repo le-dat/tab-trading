@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsBoolean, IsNumber, IsPositive, Min, Max, IsOptional } from 'class-validator';
+import { IsString, IsBoolean, IsNumber, IsPositive, Min, Max } from 'class-validator';
 
 export class CreateOrderDto {
   @ApiProperty({ example: 'BTC_USD', description: 'Asset symbol' })
@@ -31,13 +31,4 @@ export class CreateOrderDto {
   @Min(0.001)
   @Max(0.1)
   stakeWei: string;
-
-  @ApiProperty({ example: '1709500000', description: 'Expiry timestamp' })
-  @IsNumber()
-  expiryTimestamp: string;
-
-  @ApiProperty({ required: false, description: 'Optional order ID from contract' })
-  @IsOptional()
-  @IsString()
-  orderIdOnContract?: string;
 }
