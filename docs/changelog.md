@@ -19,14 +19,17 @@ Claude will add an entry to this file with: what was built, key decisions made, 
 
 ## Unreleased — In Progress
 
-### Phase 2 — Infrastructure
-- `docker-compose.yml`: Postgres (:5434), Redis (:6380), Kafka (:29093), Zookeeper (:2182), MinIO (:9002/:9003) — all healthy
-- CLI-only dev: removed `Makefile` — use `docker compose`, `yarn`, `forge` directly
-- `docker.env` / `docker.env.example`: credential templates (gitignored)
-- `.env.example`: replaced generic template with full Tap Trading vars (Postgres :5434, Redis :6380, Kafka :29093)
-- `.gitignore`: added `docker.env`, `postgres_data/`, `redis_data/`, `minio_data/`
-- Root `package.json`: project metadata (no workspaces — each package manages its own deps)
-- `be/`: NestJS scaffold — `main.ts`, `app.module.ts`, `data-source.ts`, `Order` entity
+### Added
+- `be/`: `@nestjs/swagger` + `swagger-ui-express` installed; Swagger UI at `/api/docs`
+- `be/src/main.ts`: `DocumentBuilder` with title "Tap Trading API", bearer auth, mounted at `/api/docs`
+- `be/src/modules/auth/auth.controller.ts`: `@ApiTags`, `@ApiOperation`, `@ApiResponse` decorators
+- `be/src/modules/order/order.controller.ts`: `@ApiTags`, `@ApiOperation`, `@ApiResponse`, `@ApiQuery` decorators
+- `be/src/modules/price/price.controller.ts`: `@ApiTags`, `@ApiOperation`, `@ApiParam`, `@ApiResponse` decorators
+- `be/src/modules/order/dto/create-order.dto.ts`: `@ApiProperty` with examples on all fields
+- `be/src/modules/auth/auth.controller.ts` (RegisterDto): `@ApiProperty` with examples
+
+### Changed
+- `be/`: Consolidated secrets into single `be/.env`. Removed orphaned `docker.env` (was never loaded by docker-compose). docker-compose.yml now uses `env_file: .env` on postgres, redis, minio services. All infra credentials (POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, REDIS_PASSWORD) in one file instead of scattered across docker.env + .env + embedded in URLs.
 
 ### Phase 1 — Contract Hardening
 - `PayoutPool.sol`: added `ReentrancyGuard` + `nonReentrant` on `withdraw()`
@@ -37,6 +40,22 @@ Claude will add an entry to this file with: what was built, key decisions made, 
 - 57 Foundry tests passing (Phase 1 complete)
 
 ---
+
+## [0.1.1] — Backend Scaffolding
+
+_Phase 2 partial — 2026-04-02_
+
+### Phase 2 — Infrastructure (complete)
+- `docker-compose.yml`: Postgres (:5434), Redis (:6380), Kafka (:29093), Zookeeper (:2182), MinIO (:9002/:9003) — all healthy
+- CLI-only dev: removed `Makefile` — use `docker compose`, `yarn`, `forge` directly
+- `docker.env` / `docker.env.example`: credential templates (gitignored)
+- `.env.example`: replaced generic template with full Tap Trading vars
+- `be/`: NestJS scaffold — `main.ts`, `app.module.ts`, `data-source.ts`
+- `be/src/entities/`: Order, User, Settlement, Payment entities with TypeORM decorators
+- `be/src/migrations/1709420400000-InitialSchema.ts`: initial migration (users, orders, settlements, payments tables created)
+- `be/src/modules/`: Auth, Order, Price, Settlement, Socket NestJS modules scaffolded
+- `.gitignore`: added `docker.env`, `postgres_data/`, `redis_data/`, `minio_data/`
+- Root `package.json`: project metadata (no workspaces)
 
 ## [0.1.0] — Contracts (target: Week 2)
 

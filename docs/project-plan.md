@@ -180,12 +180,13 @@ Repeat for each module in order:
   [x] Step 5: Verify TypeChain bindings (62 typings generated)
   [x] Step 5b: Contract hardening — ReentrancyGuard, Ownable, stake limits, PayoutPool pause coordination (57 tests passing)
 
-[ ] Phase 2: Infrastructure (~3 days)
+[x] Phase 2: Infrastructure (~3 days)
   [x] Step 6: Docker Compose setup ✅ — 5 services (Postgres, Redis, Kafka, Zookeeper, MinIO) running
-  [ ] Step 7: TypeORM migrations
+  [x] Step 7: TypeORM migrations ✅ — InitialSchema migration run successfully; users, orders, settlements, payments tables created
 
 [ ] Phase 3: Backend (~14 days)
-  [ ] Step 8: Scaffold all 10 NestJS modules
+  [x] Step 8: Scaffold all 10 NestJS modules 🔄 — auth, order, price, settlement, socket modules scaffolded (5/10); remaining: account, payment, risk, strategy, distribution
+[x] Step 8b: Add Swagger/OpenAPI documentation ✅ — all 3 controllers + DTOs decorated with @Api* decorators; docs at /api/docs
   [ ] Step 9: EVM adapters
   [ ] Step 10: Price ingestion worker
   [ ] Step 11: Settlement worker

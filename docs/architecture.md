@@ -46,8 +46,8 @@ tap-trading/                        ← project root (NOT a monorepo — each pa
 │   └── hooks/                      ← automation hooks
 ├── docs/                           ← project documentation
 ├── be/                             ← NestJS backend (Docker infra lives here)
-│   ├── docker-compose.yml          ← Postgres :5434, Redis :6380, Kafka :29093, MinIO :9002
-│   ├── docker.env                  ← Docker secrets (gitignored)
+│   ├── docker-compose.yml          ← Postgres :5434, Redis :6380, Kafka :29093, MinIO :9002/:9003
+│   ├── .env                        ← Single secrets file (gitignored — loaded by docker-compose env_file)
 │   ├── package.json
 │   └── src/
 │       ├── entities/               ← TypeORM entities (Order, User, Settlement, Payment)
@@ -153,11 +153,12 @@ Key functions:
 | settlement   | Worker background     | Redis price cache, EVM adapter          | order.won, order.lost |
 | payment      | REST /payments/\*     | EVM adapter, PostgreSQL                 | payment.processed     |
 | distribution | Kafka consumer        | PostgreSQL, EVM adapter                 | settlement.processed  |
-| price        | Worker event listener | Ethers.js WS, Redis, Kafka              | price.updated         |
+| price        | REST /prices/*        | Redis price cache                        | price.updated         |
 | risk         | Internal service      | Redis, PostgreSQL                       | —                     |
 | strategy     | Internal service      | price service, config                   | —                     |
 | socket       | Socket.io gateway     | Redis pub/sub, Kafka                    | —                     |
 | worker       | Standalone app :3002  | All above modules                       | —                     |
+| swagger      | REST /api/docs        | @nestjs/swagger                         | —                     |
 
 ---
 
@@ -250,40 +251,65 @@ payments (
 
 ## Environment Variables Reference
 
+All secrets live in a single `be/.env` file (gitignored). Loaded by both:
+- **docker-compose.yml** via `env_file: .env` (for Postgres, Redis, MinIO containers)
+- **NestJS** via `ConfigModule.forRoot({ envFilePath: '.env' })` (for all app vars)
+
 ```bash
-# be/.env
+# be/.env — single source of truth for all secrets
+# ── APP ──────────────────────────────────────
 NODE_ENV=development
 PORT=3001
 WORKER_PORT=3002
-NETWORK=testnet                   # testnet | mainnet
+NETWORK=testnet                        # testnet | mainnet
 
-POSTGRES_URL=postgres://root:1@localhost:5432/tapl
-REDIS_URL=redis://default:foobared@localhost:6379/0
+# ── INFRA CREDENTIALS (used by docker-compose AND NestJS) ──
+POSTGRES_USER=root
+POSTGRES_PASSWORD=tap-trading
+POSTGRES_DB=tap
+REDIS_PASSWORD=tap-trading
 
-KAFKA_BROKER=localhost:39092
-KAFKA_TOPIC_PREFIX=local-tapl
+# ── DATABASE (PostgreSQL) ────────────────────
+# Constructed from infra vars above — same values docker-compose uses
+POSTGRES_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5434/${POSTGRES_DB}
+
+# ── REDIS ───────────────────────────────────
+REDIS_URL=redis://default:${REDIS_PASSWORD}@localhost:6380/0
+
+# ── KAFKA ───────────────────────────────────
+KAFKA_BROKER=localhost:29093
+KAFKA_TOPIC_PREFIX=local-tap
 KAFKA_RUNNING_FLAG=true
 
+# ── MINIO (S3-compatible storage) ───────────
 MINIO_HOST=localhost
-MINIO_PORT=32126
+MINIO_PORT=9002
 MINIO_ACCESS_KEY=development
 MINIO_SECRET_KEY=123456789
 BUCKET_NAME=development
 
-RPC=https://base-sepolia.g.alchemy.com/v2/YOUR_KEY
+# ── EVM / CONTRACTS (BASE Sepolia) ──────────
+RPC=https://sepolia.base.org
 ADMIN_PRIVATE_KEY=0x...
 CONTRACT_TAP_ORDER=0x...
 CONTRACT_PAYOUT_POOL=0x...
+CONTRACT_PRICE_FEED_ADAPTER=0x...
 
-JWT_SECRET=your-jwt-secret
-PRIVY_APP_ID=your-privy-app-id
+# ── PRICE FEEDS (BASE Sepolia Chainlink) ────
+FEED_BTC_USD=0x...
+FEED_ETH_USD=0x...
+
+# ── AUTH (JWT) ───────────────────────────────
+JWT_SECRET=your-jwt-secret-min-32-chars-here
+
+# ── PRIVY ───────────────────────────────────
 PRIVY_APP_SECRET=your-privy-secret
+```
 
-# Chainlink feed addresses (BASE Sepolia)
-FEED_BTC_USD=0x0FB99723Aee6f420beAD13e6bBB79b7E6F034298
-FEED_ETH_USD=0x4aDC67696bA383F43DD60A9e78F2C97Fbbfc7cb1
+> **Note:** docker-compose.yml used to reference a separate `docker.env` file — this is no longer used. All secrets consolidated into `be/.env`. Docker ports: Postgres :5434, Redis :6380, Kafka :29093, MinIO :9002/:9003.
 
-# fe/.env.local
+```bash
+# fe/.env.local (frontend)
 NEXT_PUBLIC_API_URL=http://localhost:3001
 NEXT_PUBLIC_WS_URL=http://localhost:3001
 NEXT_PUBLIC_PRIVY_APP_ID=your-privy-app-id

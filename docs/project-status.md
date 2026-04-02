@@ -24,52 +24,53 @@ Claude will update "Last session" and "Next session" sections below.
 
 ## Current Phase
 
-**Phase:** 2 — Infrastructure (🔄 IN PROGRESS)
-**Week:** 3
-**Overall progress:** 25% (See [Detailed Plan](project-plan.md) for steps)
+**Phase:** 3 — Backend (🔄 IN PROGRESS)
+**Week:** 4
+**Overall progress:** 35% (See [Detailed Plan](project-plan.md) for steps)
 
 ---
 
 ## Last Session
 
-**Date:** 2026-03-31 (third session)
-**Duration:** ~30 min
+**Date:** 2026-04-02 (fourth session)
+**Duration:** ~15 min
 **Completed:**
-- Created `docker-compose.yml` with Postgres (:5434), Redis (:6380), Kafka (:29093), Zookeeper, MinIO — all running and healthy
-- Removed `Makefile` — using CLI commands directly (`docker compose`, `yarn`, `forge`)
-- Created `docker.env` + `docker.env.example` credential templates (gitignored)
-- Replaced generic `.env.example` with Tap Trading-specific vars aligned to Docker ports
-- Replaced root `package.json` — no workspaces (each package manages its own deps)
-- Created `be/` NestJS scaffold: `main.ts`, `app.module.ts`, `data-source.ts`, `Order` entity
-- Updated `.gitignore` to exclude `docker.env` and Docker volume dirs
+- Scaffolded 5 NestJS modules: auth, order, price, settlement, socket
+- Created 4 TypeORM entities: User, Order, Settlement, Payment
+- Generated `InitialSchema` migration file
+- Updated `app.module.ts` to import all 5 modules
+- Docker infra confirmed healthy (from previous session)
+
+**Phase 2 status:** Infrastructure complete, migration entity scaffold done — awaiting `yarn migration:up`
 
 ---
 
 ## Next Session — Start Here
 
-**Goal:** Finish Phase 2 Infrastructure — complete Docker setup + run migrations
+**Goal:** Finish Phase 3 Backend — implement NestJS module internals + EVM adapters
 
-**Plan:** [project-plan.md](project-plan.md) — Phase 2 🔄 in progress
+**Plan:** [project-plan.md](project-plan.md) — Phase 2 ✅ done, Phase 3 🔄 in progress
 
 **First command to run:**
 ```bash
-cd be && docker compose -f docker-compose.yml --env-file docker.env ps
+cd be && yarn dev
 ```
 
 **Exact prompt to give Claude:**
 ```
-Finish Phase 2: Infrastructure.
-1. Run `cd be && docker compose -f docker-compose.yml --env-file docker.env up -d` to start infra
-2. Run `cd be && yarn install` (and `cd smc && yarn install` if needed)
-3. Create remaining TypeORM entities (User, Settlement, Payment)
-4. Run `cd be && yarn migration:up` to apply migrations
-5. Then scaffold the NestJS modules: auth, order, price, settlement, socket
+Continue Phase 3 backend development.
+1. Implement EVM adapters: TapOrderAdapter and PayoutPoolAdapter in be/src/adapters/
+2. Implement the settlement worker (polling Redis every 100ms, calling settleOrder on-chain)
+3. Implement the price ingestion worker (Chainlink WebSocket → Redis → Kafka)
+4. Wire Socket.io gateway to push order:won/order:lost events to clients
+5. Implement the auth module service (Privy JWT verification → JWT issue)
 ```
 
 **Files to touch next:**
-- `be/src/entities/` (add User, Settlement, Payment entities)
-- `be/src/modules/` (scaffold NestJS modules)
-- `docker-compose.yml` — Kafka healthcheck fix (nc command may not be available in container)
+- `be/src/adapters/` (TapOrderAdapter, PayoutPoolAdapter)
+- `be/src/modules/settlement/` (worker loop implementation)
+- `be/src/modules/price/` (Chainlink ingestion)
+- `be/src/modules/socket/` (Socket.io gateway)
 
 ---
 
@@ -84,14 +85,14 @@ Finish Phase 2: Infrastructure.
 | Contract tests | ✅ done | 57 Foundry tests passing (23 + 34 security tests) |
 | TypeChain bindings | ✅ done | 62 typings via `yarn typechain:gen` |
 | deploy.ts | ✅ done | Updated with DEFAULT_ADMIN_ROLE grant for pause coordination |
-| Docker Compose infra | 🔄 done | Postgres :5434, Redis :6380, Kafka :29093, MinIO :9002/:9003 — all healthy |
+| Docker Compose infra | ✅ done | Postgres :5434, Redis :6380, Kafka :29093, MinIO :9002/:9003 — all healthy |
 | Makefile | ❌ removed | CLI-only approach — docker compose + yarn + forge directly |
-| NestJS backend scaffold | 🔄 in progress | `main.ts`, `app.module.ts`, `data-source.ts`, `Order` entity exist |
-| TypeORM migrations | ⬜ not started | Phase 2 |
+| NestJS backend scaffold | ✅ done | `main.ts`, `app.module.ts`, `data-source.ts`, all 5 modules scaffolded |
+| TypeORM migrations | ✅ done | InitialSchema migration run; users, orders, settlements, payments tables created with indexes |
 | BASE Sepolia deploy | ⬜ not started | Phase 5 |
-| Backend: auth | ⬜ not started | Phase 3 |
-| Backend: price | ⬜ not started | Phase 3 |
-| Backend: order | ⬜ not started | Phase 3 |
+| Backend: auth | 🔄 in progress | Phase 3 — auth + price + order controllers scaffolded; Swagger docs at /api/docs |
+| Backend: price | 🔄 in progress | Phase 3 |
+| Backend: order | 🔄 in progress | Phase 3 |
 | Backend: settlement | ⬜ not started | Phase 3 |
 | Backend: socket | ⬜ not started | Phase 3 |
 | Frontend: auth screen | ⬜ not started | Phase 4 |
