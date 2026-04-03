@@ -1,12 +1,12 @@
 #!/bin/bash
 # Hook: Runs after Claude finishes a task
-# Checks if tests pass before ending
+# Checks lint and type errors before ending
 
-echo "🔍 Running post-task checks..."
+echo "Running post-task checks..."
 
 # Run lint if package.json exists
 if [ -f "package.json" ]; then
-  if npm run lint --silent 2>/dev/null; then
+  if npm run lint 2>/dev/null; then
     echo "✅ Lint passed"
   else
     echo "⚠️  Lint has errors — please review before committing"

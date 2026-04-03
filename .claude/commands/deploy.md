@@ -5,7 +5,7 @@ Deploy the Tap Trading platform to production — smart contracts on BASE Mainne
 
 ## Pre-deploy checklist
 ```
-[ ] All tests pass: yarn test (all workspaces)
+[ ] All tests pass: `cd be && yarn test` && `cd smc && forge test`
 [ ] Contract has been thoroughly internally reviewed
 [ ] Production .env is correctly configured (mainnet RPC, ADMIN_PRIVATE_KEY)
 [ ] ADMIN_PRIVATE_KEY wallet has enough ETH to pay gas (minimum 0.1 ETH)
@@ -17,7 +17,7 @@ Deploy the Tap Trading platform to production — smart contracts on BASE Mainne
 
 ## Step 1: Deploy Smart Contracts to BASE Mainnet
 ```bash
-cd apps/contracts
+cd smc
 
 # Final test
 yarn hardhat test
@@ -34,13 +34,13 @@ yarn hardhat run scripts/fund-pool.ts --network base -- --amount 1.0
 ```
 
 > ⚠ After deploying, **copy contract addresses** into:
-> - `apps/backend/.env` (CONTRACT_TAP_ORDER, CONTRACT_PAYOUT_POOL)
-> - `apps/frontend/.env.local` (NEXT_PUBLIC_TAP_ORDER_ADDRESS)
+> - `be/.env` (CONTRACT_TAP_ORDER, CONTRACT_PAYOUT_POOL)
+> - `fe/.env.local` (NEXT_PUBLIC_TAP_ORDER_ADDRESS)
 
 ## Step 2: Deploy Backend (Docker)
 ```bash
 # Build image
-docker build -t tap-backend:latest ./apps/backend
+docker build -t tap-backend:latest ./be
 
 # Tag with commit SHA for easy rollback
 GIT_SHA=$(git rev-parse --short HEAD)
@@ -88,7 +88,7 @@ echo "=== Deploy complete ==="
 
 ## Step 3: Deploy Frontend (Vercel)
 ```bash
-cd apps/frontend
+cd fe
 
 # Set production env vars on Vercel dashboard first, then:
 vercel --prod

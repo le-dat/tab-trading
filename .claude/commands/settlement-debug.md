@@ -35,7 +35,7 @@ ORDER BY created_at DESC;
 
 ### 4. Check Contract directly
 ```bash
-cd apps/contracts
+cd smc
 # Check order on-chain
 yarn hardhat run scripts/check-order.ts --network base-sepolia
 # Expected output: { orderId, status, currentPrice, targetPrice }
@@ -65,7 +65,7 @@ console.log('BTC price:', price.answer.toString());
 
 ### 7. Simulate settlement manually
 ```bash
-cd apps/contracts
+cd smc
 # Call settleOrder directly to test
 yarn hardhat run scripts/manual-settle.ts --network base-sepolia -- --orderId 42
 ```

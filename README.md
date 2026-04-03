@@ -20,9 +20,9 @@ foundry (forge)
 
 ```bash
 # Copy and fill in
-cp apps/contracts/.env.example apps/contracts/.env
-cp apps/backend/.env.example apps/backend/.env
-cp apps/frontend/.env.local.example apps/frontend/.env.local
+cp smc/.env.example smc/.env
+cp be/.env.example be/.env
+cp fe/.env.local.example fe/.env.local
 ```
 
 ### 3. Start Infra
@@ -34,7 +34,7 @@ docker-compose up -d
 ### 4. Compile Contracts
 
 ```bash
-cd apps/contracts
+cd smc
 forge build && yarn compile && yarn typechain:gen
 ```
 
@@ -42,13 +42,13 @@ forge build && yarn compile && yarn typechain:gen
 
 ```bash
 # Deploy TapOrder + PayoutPool
-cd apps/contracts
+cd smc
 forge script script/Deploy.s.sol --rpc-url $RPC --private-key $PRIVATE_KEY --broadcast
 
 # Update .env with deployed addresses
 ```
 
-**Manual step:** Copy the deployed contract addresses from the output and update `CONTRACT_TAP_ORDER` and `CONTRACT_PAYOUT_POOL` in `apps/backend/.env` and `NEXT_PUBLIC_TAP_ORDER_ADDRESS` in `apps/frontend/.env.local`.
+**Manual step:** Copy the deployed contract addresses from the output and update `CONTRACT_TAP_ORDER` and `CONTRACT_PAYOUT_POOL` in `be/.env` and `NEXT_PUBLIC_TAP_ORDER_ADDRESS` in `fe/.env.local`.
 
 ### 6. Fund PayoutPool
 
@@ -62,7 +62,7 @@ cast call $CONTRACT_PAYOUT_POOL "getBalance(address)(uint256)" $FEED_BTC_USD --r
 ### 7. Start Backend
 
 ```bash
-cd apps/backend
+cd be
 yarn install
 yarn migration:run
 yarn start:dev
@@ -71,7 +71,7 @@ yarn start:dev
 ### 8. Start Frontend
 
 ```bash
-cd apps/frontend
+cd fe
 yarn install
 yarn dev
 ```
@@ -93,7 +93,7 @@ yarn dev
 ### Contract Development
 
 ```bash
-cd apps/contracts
+cd smc
 
 # Edit .sol files
 forge build                        # Compile
@@ -101,12 +101,12 @@ forge test                         # Run tests
 yarn compile && yarn typechain:gen # Generate TypeChain bindings
 ```
 
-**Manual step:** After `typechain:gen`, update EVM adapter files in `apps/backend/src/adapters/` if the ABI changed.
+**Manual step:** After `typechain:gen`, update EVM adapter files in `be/src/adapters/` if the ABI changed.
 
 ### Backend Development
 
 ```bash
-cd apps/backend
+cd be
 
 # New module
 /backend-module [name]
@@ -121,7 +121,7 @@ yarn test
 ### Frontend Development
 
 ```bash
-cd apps/frontend
+cd fe
 
 # New component
 /frontend-component [name]
@@ -152,7 +152,7 @@ yarn test
 curl http://localhost:3002/health/price
 
 # Check worker logs
-docker-compose logs worker
+docker compose -f be/docker-compose.yml --env-file be/docker.env logs worker
 ```
 
 **Contract tx failing?**

@@ -47,8 +47,8 @@ Detailed in [Architecture Design](docs/architecture.md).
 
 **TypeChain Workflow:**
 
-1. `cd apps/contracts && forge build && yarn compile && yarn typechain:gen`
-2. Update `apps/backend/src/adapters/` with new bindings.
+1. `cd smc && forge build && yarn compile && yarn typechain:gen`
+2. Update `be/src/adapters/` with new bindings.
 
 **NestJS Module Pattern:**
 
@@ -114,7 +114,7 @@ this.server.to(`user:${userId}`).emit("order:lost", { orderId });
 ## 6. Environment Variables
 
 ```bash
-# apps/backend/.env
+# be/.env
 NODE_ENV=development
 PORT=3001
 WORKER_PORT=3002
@@ -145,7 +145,7 @@ PRIVY_APP_SECRET=your-privy-secret
 FEED_BTC_USD=0x0FB99723Aee6f420beAD13e6bBB79b7E6F034298   # BASE Sepolia
 FEED_ETH_USD=0x4aDC67696bA383F43DD60A9e78F2C97Fbbfc7cb1   # BASE Sepolia
 
-# apps/frontend/.env.local
+# fe/.env.local
 NEXT_PUBLIC_API_URL=http://localhost:3001
 NEXT_PUBLIC_WS_URL=http://localhost:3001
 NEXT_PUBLIC_PRIVY_APP_ID=your-privy-app-id

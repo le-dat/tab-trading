@@ -12,7 +12,7 @@ You are an expert in NestJS and Jest Testing. Your mission is to ensure the corr
 ### 1. Check Environment
 ```bash
 # Navigate to the backend directory
-cd apps/backend
+cd be
 # Check scripts in package.json
 cat package.json | grep test
 ```

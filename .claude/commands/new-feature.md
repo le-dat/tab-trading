@@ -15,7 +15,7 @@ Overrides new-feature.md from claude-starter to add Tap Trading-specific context
    b. Does this feature change the order lifecycle?
       → If YES: update risk module, add new Kafka event
    c. Does this feature require a contract change?
-      → If YES: start from apps/contracts/, generate new TypeChain first
+      → If YES: start from smc/, generate new TypeChain first
 3. Create a GitHub Issue before coding:
    gh issue create --title "feat: [feature name]" --body "[description + acceptance criteria]"
 ```
@@ -31,7 +31,7 @@ git checkout -b feat/issue-{NUMBER}-{feature-name}
 
 **If there is a contract change:**
 ```
-apps/contracts/ → test → typechain:gen → apps/backend/adapters/ → module → frontend
+smc/ → test → typechain:gen → be/adapters/ → module → frontend
 ```
 
 **If backend change only:**

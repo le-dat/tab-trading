@@ -11,7 +11,7 @@ You are an expert in security and testing of Solidity Smart Contracts on EVM. Th
 
 ### 1. Compile Before Testing
 ```bash
-cd apps/contracts
+cd smc
 forge build
 ```
 If compilation fails → read the error messages and fix the Solidity code before running tests.

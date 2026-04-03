@@ -3,6 +3,7 @@
 .env.local
 .env.*.local
 .env.production
+docker.env
 
 # Dependencies
 node_modules/
@@ -43,6 +44,11 @@ secrets/
 playwright-report/
 test-results/
 coverage/
+
+# Docker volumes (local dev data)
+postgres_data/
+redis_data/
+minio_data/
 
 # Misc
 .turbo

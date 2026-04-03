@@ -8,7 +8,7 @@ Workflow for developing, testing, and deploying smart contracts for Tap Trading 
 
 ---
 
-## Project structure (apps/contracts/)
+## Project structure (smc/)
 
 ```
 contracts/
@@ -43,7 +43,7 @@ hardhat.config.ts           ← kept for compile + typechain only
 4. forge build                   ← compile with Foundry (generates ABI in out/)
 5. yarn compile                  ← compile with Hardhat (for typechain)
 6. yarn typechain:gen            ← update TypeScript bindings
-7. Update apps/backend/src/adapters/ to use the new function
+7. Update be/src/adapters/ to use the new function
 ```
 
 ### When deploying to testnet
@@ -162,7 +162,7 @@ forge test
 [ ] yarn foundry:test → 100% pass
 [ ] forge build → compiled
 [ ] yarn compile && yarn typechain:gen → bindings updated
-[ ] apps/backend/src/adapters/ updated to match new ABI
+[ ] be/src/adapters/ updated to match new ABI
 [ ] deploy.ts script updated if constructor params changed
 [ ] docs/architecture.md "Smart Contract Architecture" section updated
 [ ] /update-docs completed

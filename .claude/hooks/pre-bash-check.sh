@@ -7,7 +7,8 @@ COMMAND="$1"
 # Check for dangerous patterns
 DANGEROUS_PATTERNS=(
   "rm -rf /"
-  "git push --force origin main"
+  "git push --force"
+  "git push -f"
   "DROP TABLE"
   "DELETE FROM.*WHERE 1=1"
   "truncate"

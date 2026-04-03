@@ -29,11 +29,11 @@ Target: [Milestone 1 — MVP](spec-doc.md#milestone-1--mvp-weeks-18) (~8 weeks)
 ---
 
 ## Phase 1 — Smart Contracts (~5 days, ✅ COMPLETE)
-> Status: All 23 tests passing. TypeChain bindings generated. Ready for BASE Sepolia deploy.
+> Status: All 57 tests passing. TypeChain bindings generated. Ready for BASE Sepolia deploy.
 
 ### Step 3: Complete TapOrder.sol Foundry tests
 - Command: /smart-contract-dev
-- Run: `cd apps/contracts && forge test`
+- Run: `cd smc && forge test`
 - Done when: All settlement edge cases pass (inclusive touch, gap through, double-settle, stale feed, pause)
 - Dependency: Contracts written (✅ done)
 
@@ -44,8 +44,8 @@ Target: [Milestone 1 — MVP](spec-doc.md#milestone-1--mvp-weeks-18) (~8 weeks)
 - Dependency: Step 3
 
 ### Step 5: Verify TypeChain bindings are up to date
-- Run: `cd apps/contracts && forge build && yarn compile && yarn typechain:gen`
-- Done when: `apps/contracts/typechain-types/` contains fresh bindings for all 3 contracts
+- Run: `cd smc && forge build && yarn compile && yarn typechain:gen`
+- Done when: `smc/typechain-types/` contains fresh bindings for all 3 contracts
 - Dependency: Step 3 + Step 4
 
 ---
@@ -53,12 +53,13 @@ Target: [Milestone 1 — MVP](spec-doc.md#milestone-1--mvp-weeks-18) (~8 weeks)
 ## Phase 2 — Infrastructure (~3 days)
 ### Step 6: Set up Docker Compose for local dev
 - Command: /dev-setup
-- Run: `docker compose up -d` (after writing docker-compose.yml)
-- Done when: `docker compose ps` shows Postgres ✅, Redis ✅, Kafka ✅, MinIO ✅
+- Run: `cd be && docker compose -f docker-compose.yml --env-file docker.env up -d`
+- Done when: `cd be && docker compose -f docker-compose.yml --env-file docker.env ps` shows all healthy
 - Dependency: None
+- Note: Ports mapped non-standard (5434, 6380, 29093, 2182, 9002/9003) to avoid conflicts with existing containers
 
 ### Step 7: Create TypeORM migrations for core entities
-- Run: `cd apps/backend && yarn migration:generate src/migrations/InitialSchema`
+- Run: `cd be && yarn migration:generate src/migrations/InitialSchema`
 - Done when: Migration files created for users, orders, settlements, payments tables
 - Dependency: Step 6
 
@@ -83,7 +84,7 @@ Repeat for each module in order:
 - Dependency: Step 6 + Step 7
 
 ### Step 9: Implement EVM adapters (TapOrderAdapter, PayoutPoolAdapter)
-- Run: Write adapters in `apps/backend/src/adapters/`
+- Run: Write adapters in `be/src/adapters/`
 - Done when: `TapOrderAdapter.createOrder()` and `TapOrderAdapter.settleOrder()` work against BASE Sepolia
 - Dependency: Step 5 (TypeChain bindings) + Step 8 (order module)
 
@@ -99,7 +100,7 @@ Repeat for each module in order:
 
 ### Step 12: End-to-end backend test
 - Command: /backend-module (already scaffolded)
-- Run: `yarn test` in apps/backend
+- Run: `yarn test` in be
 - Done when: Integration tests pass for full create → settle flow
 - Dependency: Step 8 + Step 9 + Step 10 + Step 11
 
@@ -108,17 +109,17 @@ Repeat for each module in order:
 ## Phase 4 — Frontend (~10 days)
 
 ### Step 13: Scaffold Next.js app structure
-- Run: `ls apps/frontend/app/` already has route groups (auth), (trading), (history), (wallet)
+- Run: `ls fe/app/` already has route groups (auth), (trading), (history), (wallet)
 - Done when: `pages/` or `app/` routes exist for all 4 route groups
 - Dependency: Step 6
 
 ### Step 14: Implement auth screen (Privy)
-- Run: `apps/frontend/app/(auth)/`
+- Run: `fe/app/(auth)/`
 - Done when: User can login via Privy (email/social) and get JWT
 - Dependency: Step 8 (auth module)
 
 ### Step 15: Implement trading screen (main trade flow)
-- Run: `apps/frontend/app.(trading)/`
+- Run: `fe/app.(trading)/`
 - Components needed: PriceDisplay, TargetBlockGrid, DurationPicker, StakeInput, TradeButton, PayoutDisplay
 - Done when: User sees live BTC/USD price, taps block → selects duration → enters stake → sees payout → confirms
 - Dependency: Step 10 (price feed) + Step 11 (socket push)
@@ -129,12 +130,12 @@ Repeat for each module in order:
 - Dependency: Step 15
 
 ### Step 17: Implement win/lose animations + trade history
-- Run: `apps/frontend/app.(history)/` + Framer Motion animations
+- Run: `fe/app.(history)/` + Framer Motion animations
 - Done when: WIN/LOSE animation plays on settlement; trade history page shows all past orders
 - Dependency: Step 15 + Step 16
 
 ### Step 18: Implement wallet screen
-- Run: `apps/frontend/app.(wallet)/`
+- Run: `fe/app.(wallet)/`
 - Done when: User can see balance, deposit (EOA → contract), withdraw
 - Dependency: Step 8 (payment module)
 
@@ -179,12 +180,13 @@ Repeat for each module in order:
   [x] Step 5: Verify TypeChain bindings (62 typings generated)
   [x] Step 5b: Contract hardening — ReentrancyGuard, Ownable, stake limits, PayoutPool pause coordination (57 tests passing)
 
-[ ] Phase 2: Infrastructure (~3 days)
-  [ ] Step 6: Docker Compose setup
-  [ ] Step 7: TypeORM migrations
+[x] Phase 2: Infrastructure (~3 days)
+  [x] Step 6: Docker Compose setup ✅ — 5 services (Postgres, Redis, Kafka, Zookeeper, MinIO) running
+  [x] Step 7: TypeORM migrations ✅ — InitialSchema migration run successfully; users, orders, settlements, payments tables created
 
 [ ] Phase 3: Backend (~14 days)
-  [ ] Step 8: Scaffold all 10 NestJS modules
+  [x] Step 8: Scaffold all 10 NestJS modules 🔄 — auth, order, price, settlement, socket modules scaffolded (5/10); remaining: account, payment, risk, strategy, distribution
+[x] Step 8b: Add Swagger/OpenAPI documentation ✅ — all 3 controllers + DTOs decorated with @Api* decorators; docs at /api/docs
   [ ] Step 9: EVM adapters
   [ ] Step 10: Price ingestion worker
   [ ] Step 11: Settlement worker

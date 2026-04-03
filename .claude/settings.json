@@ -75,8 +75,8 @@
       "Write(.env)",
       "Write(.env.local)",
       "Write(.env.production*)",
-      "Write(apps/contracts/typechain-types/**)",
-      "Write(apps/backend/src/adapters/typechain/**)"
+      "Write(smc/typechain-types/**)",
+      "Write(be/src/adapters/typechain/**)"
     ]
   },
   "mcpServers": {
@@ -103,7 +103,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/auto-lint.sh"
+            "command": "claude_home=\"$(git rev-parse --show-toplevel 2>/dev/null || echo \"$HOME/.claude\")\" && cd \"$claude_home\" && bash .claude/hooks/auto-lint.sh"
           }
         ]
       }
@@ -113,7 +113,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/on-stop.sh"
+            "command": "claude_home=\"$(git rev-parse --show-toplevel 2>/dev/null || echo \"$HOME/.claude\")\" && cd \"$claude_home\" && bash .claude/hooks/on-stop.sh"
           }
         ]
       }
@@ -124,7 +124,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/pre-bash-check.sh"
+            "command": "claude_home=\"$(git rev-parse --show-toplevel 2>/dev/null || echo \"$HOME/.claude\")\" && cd \"$claude_home\" && bash .claude/hooks/pre-bash-check.sh"
           }
         ]
       }
